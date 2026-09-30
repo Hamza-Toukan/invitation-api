@@ -1,0 +1,396 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// -------------------------------------------------------------
+// ENUMS
+// -------------------------------------------------------------
+
+enum UserRole {
+  HOST
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum TemplateCategory {
+  WEDDING
+  ENGAGEMENT
+  GRADUATION
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  EXPIRED
+}
+
+enum GuestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum NotificationChannel {
+  WHATSAPP
+  SMS
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+}
+
+// -------------------------------------------------------------
+// MODELS
+// -------------------------------------------------------------
+
+/// Registered hosts, administrators, and super-administrators
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  phone_number String   @unique
+  email        String?  @unique
+  name         String?
+  role         UserRole @default(HOST)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  events                     Event[]
+  orders                     Order[]
+  manualPaymentVerifications ManualPaymentVerification[] @relation("VerifiedManualPayments")
+
+  @@index([phone_number])
+  @@index([email])
+  @@map("users")
+}
+
+/// Phone-based OTP codes for passwordless authentication & verification
+model OtpVerification {
+  id           String   @id @default(uuid()) @db.Uuid
+  phone_number String
+  code_hash    String
+  attempts     Int      @default(0)
+  expires_at   DateTime
+  is_verified  Boolean  @default(false)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([phone_number])
+  @@index([phone_number, is_verified])
+  @@map("otp_verifications")
+}
+
+/// Subscription and pay-per-event pricing tiers (e.g. Basic, Premium, Luxury)
+model PricingPlan {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String   @unique
+  price       Decimal  @db.Decimal(10, 2)
+  currency    String   @default("JOD")
+  max_guests  Int      @default(200)
+  features    Json?
+  is_active   Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([slug])
+  @@index([is_active])
+  @@map("pricing_plans")
+}
+
+/// Promotional discounts and partner referral codes
+model Coupon {
+  id             String       @id @default(uuid()) @db.Uuid
+  code           String       @unique
+  discount_type  DiscountType
+  discount_value Decimal      @db.Decimal(10, 2)
+  max_uses       Int?
+  used_count     Int          @default(0)
+  partner_name   String?
+  expires_at     DateTime?
+  is_active      Boolean      @default(true)
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([code])
+  @@index([is_active])
+  @@map("coupons")
+}
+
+/// Invitation theme templates (animations, layout presets, typography)
+model Template {
+  id                String           @id @default(uuid()) @db.Uuid
+  name              String
+  slug              String           @unique
+  category          TemplateCategory
+  preview_image_url String?
+  default_config    Json
+  is_active         Boolean          @default(true)
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  events Event[]
+
+  @@index([slug])
+  @@index([category])
+  @@index([is_active])
+  @@map("templates")
+}
+
+/// Background songs, zaffeh tunes, and ambient audio tracks
+model AudioLibrary {
+  id               String   @id @default(uuid()) @db.Uuid
+  title            String
+  category         String
+  file_url         String
+  duration_seconds Int
+  is_active        Boolean  @default(true)
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([category])
+  @@index([is_active])
+  @@map("audio_libraries")
+}
+
+/// Core event invitation entity (Pay-to-Publish model)
+model Event {
+  id                   String      @id @default(uuid()) @db.Uuid
+  host_id              String      @db.Uuid
+  template_id          String      @db.Uuid
+  slug                 String?     @unique
+  status               EventStatus @default(DRAFT)
+  event_title          String
+  event_date           DateTime
+  location_name        String?
+  location_coordinates Json?
+  location_url         String?
+  music_url            String?
+  custom_config        Json?
+  published_at         DateTime?
+  expires_at           DateTime?
+  createdAt            DateTime    @default(now()) @map("created_at")
+  updatedAt            DateTime    @updatedAt @map("updated_at")
+
+  host          User                   @relation(fields: [host_id], references: [id], onDelete: Restrict)
+  template      Template               @relation(fields: [template_id], references: [id], onDelete: Restrict)
+  gallery       EventGallery[]
+  guests        Guest[]
+  wishes        GuestWish[]
+  orders        Order[]
+  notifications NotificationDispatch[]
+  analytics     EventAnalytics[]
+
+  @@index([host_id])
+  @@index([template_id])
+  @@index([slug])
+  @@index([status])
+  @@index([event_date])
+  @@map("events")
+}
+
+/// Event photo memories and gallery showcase
+model EventGallery {
+  id            String   @id @default(uuid()) @db.Uuid
+  event_id      String   @db.Uuid
+  image_url     String
+  display_order Int      @default(0)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  event Event @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  @@index([event_id])
+  @@index([event_id, display_order])
+  @@map("event_galleries")
+}
+
+/// Guests invited to an event with unique RSVP tokens and QR codes
+model Guest {
+  id                   String      @id @default(uuid()) @db.Uuid
+  event_id             String      @db.Uuid
+  guest_name           String
+  phone_number         String?
+  invitation_token     String      @unique
+  qr_code_hash         String?     @unique
+  status               GuestStatus @default(PENDING)
+  companions_allowed   Int         @default(0)
+  companions_confirmed Int         @default(0)
+  checked_in           Boolean     @default(false)
+  checked_in_at        DateTime?
+  notes                String?
+  createdAt            DateTime    @default(now()) @map("created_at")
+
+  event      Event                  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  wishes     GuestWish[]
+  dispatches NotificationDispatch[]
+
+  @@index([event_id])
+  @@index([invitation_token])
+  @@index([qr_code_hash])
+  @@index([phone_number])
+  @@index([status])
+  @@map("guests")
+}
+
+/// Interactive guestbook wishes and congratulations messages
+model GuestWish {
+  id          String   @id @default(uuid()) @db.Uuid
+  event_id    String   @db.Uuid
+  guest_id    String   @db.Uuid
+  author_name String
+  message     String
+  is_approved Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  event Event @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  guest Guest @relation(fields: [guest_id], references: [id], onDelete: Cascade)
+
+  @@index([event_id])
+  @@index([guest_id])
+  @@index([is_approved])
+  @@map("guest_wishes")
+}
+
+/// Payment checkout orders (Online cards or manual CliQ)
+model Order {
+  id                    String      @id @default(uuid()) @db.Uuid
+  event_id              String      @db.Uuid
+  user_id               String      @db.Uuid
+  amount                Decimal     @db.Decimal(10, 2)
+  currency              String      @default("JOD")
+  status                OrderStatus @default(PENDING)
+  payment_provider      String?
+  transaction_reference String?
+  raw_webhook_payload   Json?
+  createdAt             DateTime    @default(now()) @map("created_at")
+
+  event              Event                      @relation(fields: [event_id], references: [id], onDelete: Restrict)
+  user               User                       @relation(fields: [user_id], references: [id], onDelete: Restrict)
+  manualVerification ManualPaymentVerification?
+
+  @@index([event_id])
+  @@index([user_id])
+  @@index([status])
+  @@index([transaction_reference])
+  @@map("orders")
+}
+
+/// CliQ manual transfer verification with screenshot receipts
+model ManualPaymentVerification {
+  id                String    @id @default(uuid()) @db.Uuid
+  order_id          String    @unique @db.Uuid
+  receipt_image_url String
+  sender_name       String?
+  cliq_reference    String?
+  admin_notes       String?
+  verified_by       String?   @db.Uuid
+  verified_at       DateTime?
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  order    Order @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  verifier User? @relation("VerifiedManualPayments", fields: [verified_by], references: [id], onDelete: SetNull)
+
+  @@index([cliq_reference])
+  @@index([verified_by])
+  @@map("manual_payment_verifications")
+}
+
+/// Dispatched SMS / WhatsApp messages to guests with status tracking
+model NotificationDispatch {
+  id                  String              @id @default(uuid()) @db.Uuid
+  event_id            String              @db.Uuid
+  guest_id            String              @db.Uuid
+  channel             NotificationChannel
+  status              NotificationStatus
+  provider_message_id String?
+  error_reason        String?
+  sent_at             DateTime?
+
+  event Event @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  guest Guest @relation(fields: [guest_id], references: [id], onDelete: Cascade)
+
+  @@index([event_id])
+  @@index([guest_id])
+  @@index([status])
+  @@index([provider_message_id])
+  @@map("notification_dispatches")
+}
+
+/// Detailed visitor and RSVP interaction analytics
+model EventAnalytics {
+  id         BigInt   @id @default(autoincrement())
+  event_id   String   @db.Uuid
+  guest_id   String?  @db.Uuid
+  event_type String
+  ip_address String?
+  user_agent String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  event Event @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  @@index([event_id])
+  @@index([guest_id])
+  @@index([event_type])
+  @@index([createdAt])
+  @@map("event_analytics")
+}
+
+/// Security and administrative audit trail
+model AuditLog {
+  id          BigInt   @id @default(autoincrement())
+  actor_id    String?  @db.Uuid
+  action      String
+  entity_type String?
+  entity_id   String?  @db.Uuid
+  old_values  Json?
+  new_values  Json?
+  ip_address  String?
+  user_agent  String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([actor_id])
+  @@index([entity_type, entity_id])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+/// Centralized unhandled application and infrastructure error logs
+model SystemErrorLog {
+  id           BigInt   @id @default(autoincrement())
+  level        String
+  service_name String
+  message      String
+  stack_trace  String?
+  context_data Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([level])
+  @@index([service_name])
+  @@index([createdAt])
+  @@map("system_error_logs")
+}
+
+/// Key-value dynamic platform configurations and feature flags
+model SystemSetting {
+  key         String   @id
+  value       Json
+  description String?
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
