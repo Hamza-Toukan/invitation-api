@@ -3,8 +3,11 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Logger } from 'nestjs-pino';
+import helmet from '@fastify/helmet';
+import cors from '@fastify/cors';
 import { AppModule, ObserveInstrument } from './app.module';
 
 // Polyfill BigInt serialization for JSON responses (used in EventAnalytics, AuditLog, SystemErrorLog)
@@ -14,26 +17,60 @@ import { AppModule, ObserveInstrument } from './app.module';
   };
 
 async function bootstrap() {
-  const logger = new Logger('Bootstrap');
-
   const fastifyAdapter = new FastifyAdapter();
 
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     fastifyAdapter,
     {
+      bufferLogs: true,
       instrument: ObserveInstrument,
     },
   );
 
-  // Set global API prefix
-  app.setGlobalPrefix('api/v1');
+  const logger = app.get(Logger);
+  app.useLogger(logger);
 
-  // Enable CORS
-  app.enableCors({
-    origin: process.env.CORS_ORIGIN
-      ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
-      : true,
+  // Security Headers using @fastify/helmet
+  await app.register(helmet, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: [`'self'`],
+        styleSrc: [`'self'`, `'unsafe-inline'`],
+        imgSrc: [`'self'`, 'data:', 'validator.swagger.io', 'https:'],
+        scriptSrc: [`'self'`, `'unsafe-inline'`, `https:`],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  });
+
+  // CORS Configuration using @fastify/cors with local frontend and configurable origins
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'http://127.0.0.1:5173',
+  ];
+
+  if (process.env.FRONTEND_URL) {
+    allowedOrigins.push(...process.env.FRONTEND_URL.split(',').map((o) => o.trim()));
+  }
+
+  if (process.env.CORS_ORIGIN) {
+    allowedOrigins.push(...process.env.CORS_ORIGIN.split(',').map((o) => o.trim()));
+  }
+
+  await app.register(cors, {
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+      if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(null, false);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
@@ -41,8 +78,13 @@ async function bootstrap() {
       'Authorization',
       'Accept',
       'X-Requested-With',
+      'X-Request-Id',
+      'Accept-Language',
     ],
   });
+
+  // Set global API prefix
+  app.setGlobalPrefix('api/v1');
 
   // Global DTO Validation Pipe
   app.useGlobalPipes(
@@ -80,6 +122,12 @@ async function bootstrap() {
     swaggerOptions: {
       persistAuthorization: true,
     },
+  });
+
+  // Explicit route for OpenAPI JSON export (frontend code generation)
+  const httpAdapter = app.getHttpAdapter();
+  httpAdapter.get('/api/docs-json', (_req: unknown, res: { send: (data: unknown) => void }) => {
+    res.send(document);
   });
 
   const port = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 3000;
