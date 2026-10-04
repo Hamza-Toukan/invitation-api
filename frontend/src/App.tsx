@@ -1,11 +1,15 @@
 import { Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LanguageProvider } from './i18n/LanguageContext';
+import { AuthProvider } from './context/AuthContext';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { TemplatesPage } from './pages/TemplatesPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { AdminClientsPage } from './pages/admin/AdminClientsPage';
+import { AdminGuestsPage } from './pages/admin/AdminGuestsPage';
+import { AdminMessagesPage } from './pages/admin/AdminMessagesPage';
 
 function LoadingFallback() {
   return (
@@ -32,18 +36,26 @@ function LoadingFallback() {
 export default function App() {
   return (
     <LanguageProvider>
-      <BrowserRouter>
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/templates" element={<TemplatesPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/admin/*" element={<DashboardPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/templates" element={<TemplatesPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              
+              {/* Admin Portal Routes */}
+              <Route path="/admin" element={<Navigate to="/admin/clients" replace />} />
+              <Route path="/admin/clients" element={<AdminClientsPage />} />
+              <Route path="/admin/guests" element={<AdminGuestsPage />} />
+              <Route path="/admin/messages" element={<AdminMessagesPage />} />
+
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </AuthProvider>
     </LanguageProvider>
   );
 }
