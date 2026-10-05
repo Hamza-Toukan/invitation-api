@@ -125,11 +125,6 @@ async function bootstrap() {
     },
   });
 
-  // Explicit route for OpenAPI JSON export (frontend code generation)
-  const httpAdapter = app.getHttpAdapter();
-  httpAdapter.get('/api/docs-json', (_req: unknown, res: { send: (data: unknown) => void }) => {
-    res.send(document);
-  });
 
   const port = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 3000;
   const host = process.env.HOST ?? '0.0.0.0';
