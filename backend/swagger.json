@@ -1,0 +1,2345 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "Performs live diagnostics including PostgreSQL database connectivity and memory usage. Bypasses response transformation and rate limiting.",
+        "operationId": "HealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "System is healthy and ready to serve traffic\n\nThe Health Check is successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok",
+                        "degraded"
+                      ],
+                      "example": "ok"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up",
+                          "responseTime": 12
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "up",
+                              "degraded",
+                              "down"
+                            ]
+                          },
+                          "responseTime": {
+                            "type": "number",
+                            "description": "Time the health indicator took to respond, in ms"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {},
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "up",
+                              "degraded",
+                              "down"
+                            ]
+                          },
+                          "responseTime": {
+                            "type": "number",
+                            "description": "Time the health indicator took to respond, in ms"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up",
+                          "responseTime": 12
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "up",
+                              "degraded",
+                              "down"
+                            ]
+                          },
+                          "responseTime": {
+                            "type": "number",
+                            "description": "Time the health indicator took to respond, in ms"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable: Database or critical dependency failed\n\nThe Health Check is not successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error",
+                        "shutting_down"
+                      ],
+                      "example": "error"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up",
+                          "responseTime": 12
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "up",
+                              "degraded",
+                              "down"
+                            ]
+                          },
+                          "responseTime": {
+                            "type": "number",
+                            "description": "Time the health indicator took to respond, in ms"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect",
+                          "responseTime": 3005
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "up",
+                              "degraded",
+                              "down"
+                            ]
+                          },
+                          "responseTime": {
+                            "type": "number",
+                            "description": "Time the health indicator took to respond, in ms"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up",
+                          "responseTime": 12
+                        },
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect",
+                          "responseTime": 3005
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "up",
+                              "degraded",
+                              "down"
+                            ]
+                          },
+                          "responseTime": {
+                            "type": "number",
+                            "description": "Time the health indicator took to respond, in ms"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "System and database health check",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/auth/otp/send": {
+      "post": {
+        "description": "Generates a cryptographically secure 6-digit OTP code, stores its hash, and dispatches it via SMS/WhatsApp. Has a 60-second anti-spam cooldown.",
+        "operationId": "AuthController_sendOtp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendOtpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendOtpResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed: Invalid phone number format"
+          },
+          "429": {
+            "description": "Too Many Requests: Cooldown active"
+          }
+        },
+        "summary": "Send OTP verification code to phone number",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/otp/verify": {
+      "post": {
+        "description": "Verifies the 6-digit OTP code against the latest active verification record. Automatically registers new users with HOST role or authenticates existing users, issuing JWT Access and Refresh tokens.",
+        "operationId": "AuthController_verifyOtp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyOtpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP successfully verified and JWT tokens issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyOtpResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid code, expired OTP, or maximum attempts exceeded"
+          }
+        },
+        "summary": "Verify OTP code and issue JWT tokens",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "description": "Extracts and validates JWT Bearer token, returning the authenticated user profile. Can be tested directly from Swagger UI after authorizing with the Bearer token.",
+        "operationId": "AuthController_getMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Authenticated user profile retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized: Missing or invalid JWT Bearer token"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get current authenticated user profile",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/media/presigned-url": {
+      "post": {
+        "description": "Generates a temporary signed PUT URL (valid for 5 minutes) directly pointing to Cloudflare R2 object storage. Uploaded files can immediately be served via public CDN.",
+        "operationId": "MediaController_generatePresignedUrl",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeneratePresignedUrlDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Presigned upload URL created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresignedUrlResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "File size exceeds limit or MIME type is not allowed"
+          },
+          "401": {
+            "description": "Unauthorized: Missing or invalid JWT Bearer token"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Generate Cloudflare R2 presigned upload URL",
+        "tags": [
+          "Media"
+        ]
+      }
+    },
+    "/events": {
+      "post": {
+        "description": "Initializes a new digital event invitation in DRAFT mode under the authenticated host. Accommodates bilingual customization configs.",
+        "operationId": "EventsController_createEvent",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEventDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Event invitation draft created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventDetailsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed: Invalid input payload"
+          },
+          "404": {
+            "description": "Chosen template does not exist"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a new invitation event (Draft)",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/events/my-events": {
+      "get": {
+        "description": "Returns a list of all events created by the logged-in host, including template details, gallery images count, and live RSVP summary.",
+        "operationId": "EventsController_getMyEvents",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of host events retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventDetailsDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get all events owned by the authenticated host",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/events/{id}": {
+      "get": {
+        "description": "Retrieves the full configuration, gallery items, music, and RSVP summary of an event. Only accessible by the event host or administrators.",
+        "operationId": "EventsController_getEventById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Event UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventDetailsDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden: You do not own this event"
+          },
+          "404": {
+            "description": "Event not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get full event details by ID",
+        "tags": [
+          "Events"
+        ]
+      },
+      "patch": {
+        "description": "Updates event title, date, location, music, or custom JSON template settings.",
+        "operationId": "EventsController_updateEvent",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Event UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEventDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event updated successfully"
+          },
+          "403": {
+            "description": "Forbidden: You do not own this event"
+          },
+          "404": {
+            "description": "Event not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update event invitation details or configuration",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/events/{id}/gallery": {
+      "post": {
+        "description": "Appends a photo URL (typically obtained via Cloudflare R2 presigned URL) to the event gallery.",
+        "operationId": "EventsController_addGalleryImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Event UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddGalleryImageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Image added to gallery successfully"
+          },
+          "403": {
+            "description": "Forbidden: You do not own this event"
+          },
+          "404": {
+            "description": "Event not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Add an image to the event photo gallery",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/events/{id}/gallery/{imageId}": {
+      "delete": {
+        "operationId": "EventsController_deleteGalleryImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Event UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "description": "Gallery image UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image removed from gallery successfully"
+          },
+          "403": {
+            "description": "Forbidden: You do not own this event"
+          },
+          "404": {
+            "description": "Event or image not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete an image from the event photo gallery",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/events/{eventId}/guests": {
+      "post": {
+        "description": "Creates a guest record and automatically generates a unique URL-safe invitation token and QR code hash.",
+        "operationId": "GuestAdminController_createGuest",
+        "parameters": [
+          {
+            "name": "eventId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGuestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Guest successfully created"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Add an individual guest to event",
+        "tags": [
+          "Host Guests"
+        ]
+      },
+      "get": {
+        "description": "Filter guests by RSVP status (PENDING, ACCEPTED, DECLINED), check-in status, or text search.",
+        "operationId": "GuestAdminController_getGuests",
+        "parameters": [
+          {
+            "name": "eventId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by RSVP status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "ACCEPTED",
+                "DECLINED"
+              ]
+            }
+          },
+          {
+            "name": "checkedIn",
+            "required": false,
+            "in": "query",
+            "description": "Filter by physical reception check-in status",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by guest name or phone number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of guests per page",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of guests"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "List event guests with pagination and filters",
+        "tags": [
+          "Host Guests"
+        ]
+      }
+    },
+    "/events/{eventId}/guests/batch": {
+      "post": {
+        "description": "Creates up to 200 guests in a single transactional payload.",
+        "operationId": "GuestAdminController_createGuestsBatch",
+        "parameters": [
+          {
+            "name": "eventId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchCreateGuestsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Batch guests created successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Batch add multiple guests",
+        "tags": [
+          "Host Guests"
+        ]
+      }
+    },
+    "/events/{eventId}/guests/import-excel": {
+      "post": {
+        "description": "Accepts raw binary or multipart Excel (.xlsx) file buffer, maps columns, and imports guests in bulk.",
+        "operationId": "GuestAdminController_importExcel",
+        "parameters": [
+          {
+            "name": "eventId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Binary Excel (.xlsx) file content",
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Guests imported successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Bulk import guests from Excel spreadsheet",
+        "tags": [
+          "Host Guests"
+        ]
+      }
+    },
+    "/events/{eventId}/guests/export-excel": {
+      "get": {
+        "description": "Generates a downloadable Excel file containing all guests, contact information, attendance status, and notes.",
+        "operationId": "GuestAdminController_exportExcel",
+        "parameters": [
+          {
+            "name": "eventId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary Excel file stream (.xlsx)"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Export event guests to formatted Excel sheet",
+        "tags": [
+          "Host Guests"
+        ]
+      }
+    },
+    "/events/{eventId}/guests/{guestId}": {
+      "delete": {
+        "operationId": "GuestAdminController_deleteGuest",
+        "parameters": [
+          {
+            "name": "eventId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "guestId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Guest successfully deleted"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete an event guest",
+        "tags": [
+          "Host Guests"
+        ]
+      }
+    },
+    "/events/{eventId}/guests/{guestId}/pass-pdf": {
+      "get": {
+        "description": "Generates and streams a personalized single-page VIP entry pass PDF with embedded QR Code.",
+        "operationId": "GuestAdminController_getGuestPassPdf",
+        "parameters": [
+          {
+            "name": "eventId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "guestId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary PDF file stream"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Download VIP Guest Pass PDF",
+        "tags": [
+          "Host Guests"
+        ]
+      }
+    },
+    "/events/{eventId}/check-in": {
+      "post": {
+        "description": "Validates the scanned QR hash against the event guestbook, marks attendance, and returns companion and seating details for screen display.",
+        "operationId": "GuestCheckinController_checkIn",
+        "parameters": [
+          {
+            "name": "eventId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckInDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Check-in processed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "alreadyCheckedIn": false,
+                    "checkedInAt": "2026-10-02T18:00:00.000Z",
+                    "guest": {
+                      "id": "b4a03780-e837-4d16-bd8f-c020d20d7ce9",
+                      "name": "طارق المصري",
+                      "companionsConfirmed": 2,
+                      "table": "VIP Table A-1"
+                    },
+                    "message": "Guest successfully checked in at reception desk"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Check in a guest at reception via QR Code hash",
+        "tags": [
+          "Reception Check-in"
+        ]
+      }
+    },
+    "/invitations/{token}": {
+      "get": {
+        "description": "Public endpoint used by web visitors to view the interactive invitation, event itinerary, location, and personalized companion allowance.",
+        "operationId": "InvitationPublicController_getInvitation",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invitation details retrieved"
+          }
+        },
+        "summary": "Fetch invitation details by secret token",
+        "tags": [
+          "Public Invitations"
+        ]
+      }
+    },
+    "/invitations/{token}/rsvp": {
+      "post": {
+        "description": "Allows invited guests to confirm attendance (ACCEPTED) or decline (DECLINED), specify confirmed companions, and submit dietary/attendance notes.",
+        "operationId": "InvitationPublicController_submitRsvp",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitRsvpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "RSVP recorded successfully"
+          }
+        },
+        "summary": "Submit or update RSVP attendance decision",
+        "tags": [
+          "Public Invitations"
+        ]
+      }
+    },
+    "/invitations/{token}/wishes": {
+      "post": {
+        "description": "Allows guests to post digital wishes and prayers to the couple or hosts.",
+        "operationId": "InvitationPublicController_submitWish",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWishDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Wish published to guestbook"
+          }
+        },
+        "summary": "Send congratulatory wish to event guestbook",
+        "tags": [
+          "Public Invitations"
+        ]
+      },
+      "get": {
+        "description": "Retrieves approved congratulations messages displayed on the invitation page.",
+        "operationId": "InvitationPublicController_getWishes",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of guest wishes"
+          }
+        },
+        "summary": "Get all guestbook wishes for this invitation event",
+        "tags": [
+          "Public Invitations"
+        ]
+      }
+    },
+    "/pricing-plans": {
+      "get": {
+        "description": "Public endpoint listing available package plans in JOD with their guest allowances and features.",
+        "operationId": "BillingController_getPricingPlans",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Active pricing tiers"
+          }
+        },
+        "summary": "List active event pricing tiers",
+        "tags": [
+          "Billing & Checkout"
+        ]
+      }
+    },
+    "/coupons/validate": {
+      "post": {
+        "description": "Calculates the discount amount and total price before placing an order.",
+        "operationId": "BillingController_validateCoupon",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateCouponDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Coupon details and calculated totals"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Validate promo coupon code against pricing tier",
+        "tags": [
+          "Billing & Checkout"
+        ]
+      }
+    },
+    "/orders": {
+      "post": {
+        "description": "Creates a pending order linked to the event, calculating coupon deductions if provided.",
+        "operationId": "BillingController_createOrder",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created with status PENDING"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Initiate a checkout order for an event in DRAFT",
+        "tags": [
+          "Billing & Checkout"
+        ]
+      }
+    },
+    "/orders/my-orders": {
+      "get": {
+        "description": "Returns all orders, verification states, and associated events for the authenticated host.",
+        "operationId": "BillingController_getMyOrders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of host orders"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "List user orders history",
+        "tags": [
+          "Billing & Checkout"
+        ]
+      }
+    },
+    "/orders/{id}": {
+      "get": {
+        "description": "Retrieves order metadata, event status, and manual CliQ receipt verification status.",
+        "operationId": "BillingController_getOrderById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order details"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get details of a specific order",
+        "tags": [
+          "Billing & Checkout"
+        ]
+      }
+    },
+    "/orders/{id}/cliq-receipt": {
+      "post": {
+        "description": "Submits a Jordanian CliQ payment screenshot for manual review. Changes provider to CLIQ_MANUAL.",
+        "operationId": "BillingController_submitCliqReceipt",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitCliqReceiptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Receipt successfully submitted and pending admin verification"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Upload CliQ manual transfer receipt",
+        "tags": [
+          "Billing & Checkout",
+          "CliQ Payments"
+        ]
+      }
+    },
+    "/admin/orders/pending-verifications": {
+      "get": {
+        "description": "Retrieves pending orders with uploaded transfer screenshots, sender names, and host contact details.",
+        "operationId": "AdminController_getPendingVerifications",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of pending verifications"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "List pending manual CliQ orders awaiting review",
+        "tags": [
+          "Admin Console"
+        ]
+      }
+    },
+    "/admin/orders/{orderId}/verify": {
+      "post": {
+        "description": "If approved, marks order COMPLETED and automatically transitions the event to PUBLISHED with a public slug. If rejected, marks order FAILED with reason notes.",
+        "operationId": "AdminController_verifyOrder",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification decision processed and logged"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Approve or reject manual CliQ order",
+        "tags": [
+          "Admin Console"
+        ]
+      }
+    },
+    "/admin/analytics/dashboard": {
+      "get": {
+        "description": "Computes total platform revenue in JOD, event publication stats, guest RSVP acceptance rates, and pending queues.",
+        "operationId": "AdminController_getDashboardAnalytics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Aggregated dashboard metrics"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Platform overview metrics and KPIs",
+        "tags": [
+          "Admin Console"
+        ]
+      }
+    },
+    "/admin/audit-logs": {
+      "get": {
+        "description": "Returns paginated administrative actions and security records.",
+        "operationId": "AdminController_getAuditLogs",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated audit logs"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Platform security and administrative audit trail",
+        "tags": [
+          "Admin Console"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Digital Interactive Invitations API",
+    "description": "SaaS API engine for digital wedding & event invitations",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "JWT-auth": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "name": "Authorization",
+        "description": "Enter your JWT Bearer token",
+        "in": "header"
+      },
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "SendOtpDto": {
+        "type": "object",
+        "properties": {
+          "phoneNumber": {
+            "type": "string",
+            "description": "Phone number in Jordanian national format (079xxxxxxx, 078xxxxxxx, 077xxxxxxx) or international E.164 format (+96279xxxxxxx)",
+            "example": "0791234567"
+          }
+        },
+        "required": [
+          "phoneNumber"
+        ]
+      },
+      "SendOtpResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "OTP sent successfully"
+          },
+          "expiresInSeconds": {
+            "type": "number",
+            "example": 300,
+            "description": "Code validity in seconds"
+          }
+        },
+        "required": [
+          "success",
+          "message",
+          "expiresInSeconds"
+        ]
+      },
+      "VerifyOtpDto": {
+        "type": "object",
+        "properties": {
+          "phoneNumber": {
+            "type": "string",
+            "description": "Phone number in Jordanian national format (079xxxxxxx) or international E.164 format (+96279xxxxxxx)",
+            "example": "0791234567"
+          },
+          "code": {
+            "type": "string",
+            "description": "6-digit verification code received via SMS/WhatsApp",
+            "example": "123456",
+            "minLength": 6,
+            "maxLength": 6
+          }
+        },
+        "required": [
+          "phoneNumber",
+          "code"
+        ]
+      },
+      "UserProfileDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "example": "+962791234567"
+          },
+          "email": {
+            "type": "object",
+            "example": "user@example.com",
+            "nullable": true
+          },
+          "name": {
+            "type": "object",
+            "example": "Ahmad Toukan",
+            "nullable": true
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "HOST",
+              "ADMIN",
+              "SUPER_ADMIN"
+            ],
+            "example": "HOST"
+          }
+        },
+        "required": [
+          "id",
+          "phoneNumber",
+          "role"
+        ]
+      },
+      "VerifyOtpResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "JWT Bearer Access Token (short-lived)",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "JWT Refresh Token (long-lived)",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserProfileDto"
+          }
+        },
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "user"
+        ]
+      },
+      "GeneratePresignedUrlDto": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string",
+            "description": "Original name of the file to be uploaded",
+            "example": "invitation-cover.webp"
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "MIME type of the media file",
+            "example": "image/webp",
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp",
+              "audio/mpeg"
+            ]
+          },
+          "fileSize": {
+            "type": "number",
+            "description": "File size in bytes (Images max 5MB: 5242880, Audio max 8MB: 8388608)",
+            "example": 2048576
+          },
+          "purpose": {
+            "type": "string",
+            "description": "Intended purpose and destination category of the media file",
+            "enum": [
+              "EVENT_GALLERY",
+              "EVENT_MUSIC",
+              "PAYMENT_RECEIPT"
+            ],
+            "example": "EVENT_GALLERY"
+          }
+        },
+        "required": [
+          "filename",
+          "mimeType",
+          "fileSize",
+          "purpose"
+        ]
+      },
+      "PresignedUrlResponseDto": {
+        "type": "object",
+        "properties": {
+          "uploadUrl": {
+            "type": "string",
+            "description": "Presigned Cloudflare R2 / S3 PUT URL for direct client upload",
+            "example": "https://account-id.r2.cloudflarestorage.com/invitation-media/gallery/photo.webp?X-Amz-Algorithm=..."
+          },
+          "publicUrl": {
+            "type": "string",
+            "description": "Permanent public CDN URL accessible to users after upload succeeds",
+            "example": "https://media.invitations.jo/gallery/1727732400-550e8400-photo.webp"
+          },
+          "key": {
+            "type": "string",
+            "description": "Unique storage key path of the object inside the bucket",
+            "example": "gallery/1727732400-550e8400-photo.webp"
+          },
+          "expiresInSeconds": {
+            "type": "number",
+            "description": "Presigned upload URL expiration time in seconds",
+            "example": 300
+          },
+          "message": {
+            "type": "string",
+            "description": "Localized status message",
+            "example": "Presigned upload URL generated successfully."
+          }
+        },
+        "required": [
+          "uploadUrl",
+          "publicUrl",
+          "key",
+          "expiresInSeconds",
+          "message"
+        ]
+      },
+      "LocationCoordinatesDto": {
+        "type": "object",
+        "properties": {
+          "lat": {
+            "type": "number",
+            "example": 31.9539,
+            "description": "Latitude"
+          },
+          "lng": {
+            "type": "number",
+            "example": 35.9106,
+            "description": "Longitude"
+          }
+        },
+        "required": [
+          "lat",
+          "lng"
+        ]
+      },
+      "CreateEventDto": {
+        "type": "object",
+        "properties": {
+          "templateId": {
+            "type": "string",
+            "description": "UUID of the chosen invitation template",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "eventTitle": {
+            "type": "string",
+            "description": "Event title",
+            "example": "حفل زفاف أحمد وسارة"
+          },
+          "eventDate": {
+            "type": "string",
+            "description": "Event date and time in ISO 8601 format",
+            "example": "2026-10-15T18:00:00.000Z"
+          },
+          "locationName": {
+            "type": "string",
+            "description": "Venue / hall name",
+            "example": "فندق الفور سيزونز - عمّان"
+          },
+          "locationUrl": {
+            "type": "string",
+            "description": "Map location URL (Google Maps or Waze)",
+            "example": "https://maps.google.com/?q=31.9539,35.9106"
+          },
+          "locationCoordinates": {
+            "description": "Geographical coordinates (latitude and longitude)",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LocationCoordinatesDto"
+              }
+            ]
+          },
+          "musicUrl": {
+            "type": "string",
+            "description": "Custom background music or zaffeh track URL",
+            "example": "https://media.invitations.jo/events/music/zaffeh.mp3"
+          },
+          "customConfig": {
+            "type": "object",
+            "description": "Custom template configuration accommodating bilingual fields (e.g. brideName, groomName, dressCode)",
+            "example": {
+              "groomName": {
+                "ar": "أحمد التوكان",
+                "en": "Ahmad Toukan"
+              },
+              "brideName": {
+                "ar": "سارة العلمي",
+                "en": "Sara Al-Alami"
+              },
+              "welcomeMessage": {
+                "ar": "نتشرف بدعوتكم لمشاركتنا فرحتنا",
+                "en": "We invite you to share our special day"
+              },
+              "dressCode": {
+                "ar": "رسمي",
+                "en": "Black Tie / Formal"
+              }
+            }
+          }
+        },
+        "required": [
+          "templateId",
+          "eventTitle",
+          "eventDate"
+        ]
+      },
+      "TemplateBriefDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "name": {
+            "type": "string",
+            "example": "Royal White Floral"
+          },
+          "slug": {
+            "type": "string",
+            "example": "royal-white-floral"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "WEDDING",
+              "ENGAGEMENT",
+              "GRADUATION"
+            ],
+            "example": "WEDDING"
+          },
+          "preview_image_url": {
+            "type": "object",
+            "example": "https://media.invitations.jo/templates/previews/royal-white.webp",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "category",
+          "preview_image_url"
+        ]
+      },
+      "EventGalleryItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "770e8400-e29b-41d4-a716-446655440001"
+          },
+          "image_url": {
+            "type": "string",
+            "example": "https://media.invitations.jo/events/gallery/photo-1.webp"
+          },
+          "display_order": {
+            "type": "number",
+            "example": 0
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2026-09-30T20:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "image_url",
+          "display_order",
+          "createdAt"
+        ]
+      },
+      "RsvpSummaryDto": {
+        "type": "object",
+        "properties": {
+          "totalGuests": {
+            "type": "number",
+            "example": 120,
+            "description": "Total invitations sent"
+          },
+          "acceptedCount": {
+            "type": "number",
+            "example": 75,
+            "description": "Confirmed attendees"
+          },
+          "declinedCount": {
+            "type": "number",
+            "example": 15,
+            "description": "Declined attendees"
+          },
+          "pendingCount": {
+            "type": "number",
+            "example": 30,
+            "description": "Pending responses"
+          },
+          "checkedInCount": {
+            "type": "number",
+            "example": 40,
+            "description": "Guests checked in at venue"
+          }
+        },
+        "required": [
+          "totalGuests",
+          "acceptedCount",
+          "declinedCount",
+          "pendingCount",
+          "checkedInCount"
+        ]
+      },
+      "EventDetailsDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "host_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440099"
+          },
+          "template_id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "slug": {
+            "type": "object",
+            "example": "wedding-ahmad-sara-2026",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "PUBLISHED",
+              "EXPIRED"
+            ],
+            "example": "DRAFT"
+          },
+          "event_title": {
+            "type": "string",
+            "example": "حفل زفاف أحمد وسارة"
+          },
+          "event_date": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2026-10-15T18:00:00.000Z"
+          },
+          "location_name": {
+            "type": "object",
+            "example": "فندق الفور سيزونز - عمّان",
+            "nullable": true
+          },
+          "location_url": {
+            "type": "object",
+            "example": "https://maps.google.com/?q=31.9539,35.9106",
+            "nullable": true
+          },
+          "location_coordinates": {
+            "type": "object",
+            "example": {
+              "lat": 31.9539,
+              "lng": 35.9106
+            },
+            "nullable": true
+          },
+          "music_url": {
+            "type": "object",
+            "example": "https://media.invitations.jo/events/music/zaffeh.mp3",
+            "nullable": true
+          },
+          "custom_config": {
+            "type": "object",
+            "example": {
+              "groomName": {
+                "ar": "أحمد التوكان",
+                "en": "Ahmad Toukan"
+              },
+              "brideName": {
+                "ar": "سارة العلمي",
+                "en": "Sara Al-Alami"
+              }
+            },
+            "nullable": true
+          },
+          "template": {
+            "$ref": "#/components/schemas/TemplateBriefDto"
+          },
+          "gallery": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EventGalleryItemDto"
+            }
+          },
+          "rsvpSummary": {
+            "$ref": "#/components/schemas/RsvpSummaryDto"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2026-09-30T10:00:00.000Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2026-09-30T10:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "host_id",
+          "template_id",
+          "slug",
+          "status",
+          "event_title",
+          "event_date",
+          "location_name",
+          "location_url",
+          "location_coordinates",
+          "music_url",
+          "custom_config",
+          "template",
+          "gallery",
+          "rsvpSummary",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateEventDto": {
+        "type": "object",
+        "properties": {
+          "templateId": {
+            "type": "string",
+            "description": "UUID of the chosen invitation template",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "eventTitle": {
+            "type": "string",
+            "description": "Event title",
+            "example": "حفل زفاف أحمد وسارة"
+          },
+          "eventDate": {
+            "type": "string",
+            "description": "Event date and time in ISO 8601 format",
+            "example": "2026-10-15T18:00:00.000Z"
+          },
+          "locationName": {
+            "type": "string",
+            "description": "Venue / hall name",
+            "example": "فندق الفور سيزونز - عمّان"
+          },
+          "locationUrl": {
+            "type": "string",
+            "description": "Map location URL (Google Maps or Waze)",
+            "example": "https://maps.google.com/?q=31.9539,35.9106"
+          },
+          "locationCoordinates": {
+            "description": "Geographical coordinates (latitude and longitude)",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LocationCoordinatesDto"
+              }
+            ]
+          },
+          "musicUrl": {
+            "type": "string",
+            "description": "Custom background music or zaffeh track URL",
+            "example": "https://media.invitations.jo/events/music/zaffeh.mp3"
+          },
+          "customConfig": {
+            "type": "object",
+            "description": "Custom template configuration accommodating bilingual fields (e.g. brideName, groomName, dressCode)",
+            "example": {
+              "groomName": {
+                "ar": "أحمد التوكان",
+                "en": "Ahmad Toukan"
+              },
+              "brideName": {
+                "ar": "سارة العلمي",
+                "en": "Sara Al-Alami"
+              },
+              "welcomeMessage": {
+                "ar": "نتشرف بدعوتكم لمشاركتنا فرحتنا",
+                "en": "We invite you to share our special day"
+              },
+              "dressCode": {
+                "ar": "رسمي",
+                "en": "Black Tie / Formal"
+              }
+            }
+          }
+        }
+      },
+      "AddGalleryImageDto": {
+        "type": "object",
+        "properties": {
+          "imageUrl": {
+            "type": "string",
+            "description": "Public URL of the photo uploaded to Cloudflare R2",
+            "example": "https://media.invitations.jo/events/gallery/photo-1.webp"
+          },
+          "displayOrder": {
+            "type": "number",
+            "description": "Display order in gallery (default: 0)",
+            "example": 0,
+            "default": 0
+          }
+        },
+        "required": [
+          "imageUrl"
+        ]
+      },
+      "CreateGuestDto": {
+        "type": "object",
+        "properties": {
+          "guestName": {
+            "type": "string",
+            "example": "أحمد خليل التميمي",
+            "description": "Full name of invited guest"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "example": "0791234567",
+            "description": "Jordanian or international mobile number"
+          },
+          "companionsAllowed": {
+            "type": "number",
+            "example": 2,
+            "default": 0,
+            "description": "Number of extra companions permitted for this invitation"
+          },
+          "notes": {
+            "type": "string",
+            "example": "VIP Table 3",
+            "description": "Optional host note, seating, or table assignment"
+          }
+        },
+        "required": [
+          "guestName"
+        ]
+      },
+      "BatchCreateGuestsDto": {
+        "type": "object",
+        "properties": {
+          "guests": {
+            "description": "Array of guests to create in bulk",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateGuestDto"
+            }
+          }
+        },
+        "required": [
+          "guests"
+        ]
+      },
+      "CheckInDto": {
+        "type": "object",
+        "properties": {
+          "qrCodeHash": {
+            "type": "string",
+            "example": "qr_9f83a2c4e1b742a0",
+            "description": "Unique QR Code cryptographic hash scanned at reception desk"
+          }
+        },
+        "required": [
+          "qrCodeHash"
+        ]
+      },
+      "SubmitRsvpDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED",
+              "DECLINED"
+            ],
+            "example": "ACCEPTED",
+            "description": "Attendance confirmation decision"
+          },
+          "companionsConfirmed": {
+            "type": "number",
+            "example": 1,
+            "default": 0,
+            "description": "Number of confirmed attending companions (cannot exceed companionsAllowed)"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Looking forward to celebrating with you!",
+            "description": "Optional note or dietary/attendance comments from guest"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "CreateWishDto": {
+        "type": "object",
+        "properties": {
+          "authorName": {
+            "type": "string",
+            "example": "عمر وخالد",
+            "description": "Name of the well-wisher"
+          },
+          "message": {
+            "type": "string",
+            "example": "ألف مبارك وبالرفاه والبنين، بارك الله لكما وجمع بينكما في خير!",
+            "description": "Congratulations message or prayer for the hosts"
+          }
+        },
+        "required": [
+          "authorName",
+          "message"
+        ]
+      },
+      "ValidateCouponDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "ROYAL20",
+            "description": "Promotional discount coupon code"
+          },
+          "planId": {
+            "type": "string",
+            "example": "b75f8c69-6523-4527-84bc-5ad26cfcf4b9",
+            "description": "ID of the pricing plan being purchased"
+          }
+        },
+        "required": [
+          "code",
+          "planId"
+        ]
+      },
+      "CreateOrderDto": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "description": "Event ID in DRAFT status to be published"
+          },
+          "planId": {
+            "type": "string",
+            "example": "660e8400-e29b-41d4-a716-446655440001",
+            "description": "Pricing plan tier selected by the host"
+          },
+          "couponCode": {
+            "type": "string",
+            "example": "AMMAN10",
+            "description": "Optional discount coupon code"
+          }
+        },
+        "required": [
+          "eventId",
+          "planId"
+        ]
+      },
+      "SubmitCliqReceiptDto": {
+        "type": "object",
+        "properties": {
+          "receiptImageUrl": {
+            "type": "string",
+            "example": "https://cdn.aura-invite.com/orders/receipts/cliq-12345.webp",
+            "description": "Cloudflare R2 URL of the uploaded transfer receipt screenshot"
+          },
+          "senderName": {
+            "type": "string",
+            "example": "حمزة كمال طوقان",
+            "description": "Full sender name shown on the Jordanian CliQ transaction slip"
+          },
+          "cliqReference": {
+            "type": "string",
+            "example": "CLIQ-JO-20261002-98471",
+            "description": "Bank or CliQ transaction reference / confirmation number"
+          }
+        },
+        "required": [
+          "receiptImageUrl",
+          "senderName"
+        ]
+      },
+      "VerifyOrderDto": {
+        "type": "object",
+        "properties": {
+          "approved": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether the CliQ transfer receipt is verified and approved"
+          },
+          "rejectionReason": {
+            "type": "string",
+            "example": "Transfer receipt is unreadable or amount is incorrect",
+            "description": "Reason for rejection if approved is false"
+          }
+        },
+        "required": [
+          "approved"
+        ]
+      }
+    }
+  }
+}
