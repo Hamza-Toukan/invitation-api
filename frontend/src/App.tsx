@@ -7,9 +7,12 @@ import { LoginPage } from './pages/LoginPage';
 import { TemplatesPage } from './pages/TemplatesPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { InvitationPage } from './pages/InvitationPage';
+import { AdminOrdersPage } from './pages/admin/AdminOrdersPage';
 import { AdminClientsPage } from './pages/admin/AdminClientsPage';
 import { AdminGuestsPage } from './pages/admin/AdminGuestsPage';
 import { AdminMessagesPage } from './pages/admin/AdminMessagesPage';
+import { AdminRoute } from './components/AdminRoute';
 
 function LoadingFallback() {
   return (
@@ -44,12 +47,17 @@ export default function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/templates" element={<TemplatesPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/invite/:token" element={<InvitationPage />} />
+              <Route path="/invite" element={<InvitationPage />} />
               
-              {/* Admin Portal Routes */}
-              <Route path="/admin" element={<Navigate to="/admin/clients" replace />} />
-              <Route path="/admin/clients" element={<AdminClientsPage />} />
-              <Route path="/admin/guests" element={<AdminGuestsPage />} />
-              <Route path="/admin/messages" element={<AdminMessagesPage />} />
+              {/* Admin Portal Protected Routes */}
+              <Route element={<AdminRoute />}>
+                <Route path="/admin" element={<Navigate to="/admin/orders" replace />} />
+                <Route path="/admin/orders" element={<AdminOrdersPage />} />
+                <Route path="/admin/clients" element={<AdminClientsPage />} />
+                <Route path="/admin/guests" element={<AdminGuestsPage />} />
+                <Route path="/admin/messages" element={<AdminMessagesPage />} />
+              </Route>
 
               <Route path="*" element={<NotFoundPage />} />
             </Routes>

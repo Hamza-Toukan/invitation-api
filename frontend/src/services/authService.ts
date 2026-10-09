@@ -1,15 +1,26 @@
 import { authApi } from './api/auth.api';
-import { mockAuthService } from './mockAuthService';
 import type { AuthTokens, UserProfile } from './types';
 
 const PRIMARY_STORAGE_KEY = 'mira.auth';
 const LEGACY_STORAGE_KEY = 'invite-studio.auth';
 
-function getStoredAuth(): AuthTokens | null {
+export function getStoredAuth(): AuthTokens | null {
   try {
     const raw = localStorage.getItem(PRIMARY_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (!parsed) return null;
+
+    // Handle both direct and nested data structures safely
+    const payload = parsed?.data?.data || parsed?.data || parsed;
+    if (payload?.accessToken) {
+      return {
+        accessToken: payload.accessToken,
+        refreshToken: payload.refreshToken || '',
+        user: payload.user || null,
+      };
+    }
+    return null;
   } catch {
     return null;
   }
@@ -17,37 +28,28 @@ function getStoredAuth(): AuthTokens | null {
 
 export const authService = {
   /**
-   * Send verification code via real backend, with graceful demo fallback
+   * Send verification code via real backend authApi
    */
   async sendOtp(phoneNumber: string): Promise<{ success: boolean; message: string; expiresInSeconds: number }> {
-    try {
-      return await authApi.sendOtp(phoneNumber);
-    } catch (err: any) {
-      console.warn('Real backend send-otp failed, falling back to mock:', err);
-      return mockAuthService.sendOtp(phoneNumber);
-    }
+    return authApi.sendOtp(phoneNumber);
   },
 
   /**
-   * Verify verification code via real backend, with graceful demo fallback
+   * Verify verification code via real backend authApi
+   * Tokens are guaranteed to be stored before returning
    */
   async verifyOtp(phoneNumber: string, code: string): Promise<AuthTokens> {
-    try {
-      return await authApi.verifyOtp(phoneNumber, code);
-    } catch (err: any) {
-      console.warn('Real backend verify-otp failed, falling back to mock:', err);
-      return mockAuthService.verifyOtp(phoneNumber, code);
-    }
+    return authApi.verifyOtp(phoneNumber, code);
   },
 
   getCurrentUser(): UserProfile | null {
-    const parsed = getStoredAuth();
-    return parsed?.user || null;
+    const auth = getStoredAuth();
+    return auth?.user || null;
   },
 
   getAccessToken(): string | null {
-    const parsed = getStoredAuth();
-    return parsed?.accessToken || null;
+    const auth = getStoredAuth();
+    return auth?.accessToken || null;
   },
 
   logout(): void {

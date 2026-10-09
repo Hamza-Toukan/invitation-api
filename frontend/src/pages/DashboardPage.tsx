@@ -1,8 +1,12 @@
-import { useState, useEffect, useMemo, type FormEvent } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLang } from '../i18n/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { eventsService } from '../services/eventsService';
+import { mediaApi } from '../services/api/media.api';
+import { triggerFileDownload } from '../services/api/guests.api';
+import { billingApi, type OrderResponse } from '../services/api/billing.api';
+import { CliqCheckoutModal } from '../components/CliqCheckoutModal';
 import type { EventDetails, Guest, GuestWish, GuestStatus } from '../services/types';
 import { BrandLogo } from '../components/BrandLogo';
 import { LangSwitch } from '../components/LangSwitch';
@@ -103,6 +107,8 @@ export function DashboardPage() {
   // Modals state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddGuestOpen, setIsAddGuestOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [orders, setOrders] = useState<OrderResponse[]>([]);
 
   // Edit form state
   const [editForm, setEditForm] = useState({
@@ -122,21 +128,69 @@ export function DashboardPage() {
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
+  // Photo upload state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !event) return;
+    try {
+      setIsUploading(true);
+      const publicUrl = await mediaApi.uploadMedia(file, 'EVENT_GALLERY');
+      const newImage = await eventsService.addGalleryImage(event.id, { imageUrl: publicUrl });
+      setEvent(prev => (prev ? { ...prev, gallery: [...prev.gallery, newImage] } : prev));
+    } catch (err: any) {
+      console.error('Gallery upload error:', err);
+      alert(err?.message || 'Failed to upload photo');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // Guest management states
+  const [copiedGuestId, setCopiedGuestId] = useState<string | null>(null);
+  const excelInputRef = useRef<HTMLInputElement>(null);
+  const [isImportingExcel, setIsImportingExcel] = useState(false);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+
+  const updateOrdersState = useCallback((fetchedOrders: any) => {
+    const arr: OrderResponse[] = Array.isArray(fetchedOrders)
+      ? fetchedOrders
+      : Array.isArray(fetchedOrders?.data)
+      ? fetchedOrders.data
+      : Array.isArray(fetchedOrders?.data?.data)
+      ? fetchedOrders.data.data
+      : Array.isArray(fetchedOrders?.orders)
+      ? fetchedOrders.orders
+      : [];
+    setOrders(arr);
+  }, []);
+
   useEffect(() => {
     document.title = t.dashboard.metaTitle;
 
     eventsService.getMyEvent().then(ev => {
-      setEvent(ev);
-      setEditForm({
-        title: ev.event_title,
-        date: ev.event_date.slice(0, 16),
-        location: ev.location_name || '',
-      });
-    });
+      if (ev) {
+        setEvent(ev);
+        setEditForm({
+          title: ev.event_title || '',
+          date: ev.event_date ? ev.event_date.slice(0, 16) : '',
+          location: ev.location_name || '',
+        });
+        eventsService.getGuests(ev.id).then(resGuests => {
+          setGuests(Array.isArray(resGuests) ? resGuests : []);
+        }).catch(() => setGuests([]));
+      }
+    }).catch(() => {});
 
-    eventsService.getGuests().then(setGuests);
-    eventsService.getWishes().then(setWishes);
-  }, [t]);
+    eventsService.getWishes().then(resWishes => {
+      setWishes(Array.isArray(resWishes) ? resWishes : []);
+    }).catch(() => setWishes([]));
+
+    billingApi.getMyOrders().then(updateOrdersState).catch(() => setOrders([]));
+  }, [t, updateOrdersState]);
 
   // Live countdown
   useEffect(() => {
@@ -167,20 +221,79 @@ export function DashboardPage() {
     setTimeout(() => setCopied(false), 2500);
   };
 
+  const handleCopyGuestLink = (g: Guest) => {
+    const token = g.invitation_token || g.invitationToken;
+    const baseUrl = window.location.origin;
+    const invitePath = event?.slug ? `/invite/${event.slug}` : `/invite/${event?.id}`;
+    const link = token ? `${baseUrl}${invitePath}?token=${token}` : `${baseUrl}${invitePath}`;
+    navigator.clipboard.writeText(link);
+    setCopiedGuestId(g.id);
+    setTimeout(() => setCopiedGuestId(null), 2500);
+  };
+
   const handleToggleCheckIn = async (guestId: string) => {
-    const updated = await eventsService.toggleGuestCheckIn(guestId);
-    setGuests(prev => prev.map(g => (g.id === updated.id ? updated : g)));
+    const targetGuest = guests.find(g => g.id === guestId);
+    const updated = await eventsService.toggleGuestCheckIn(
+      guestId,
+      event?.id,
+      targetGuest?.invitation_token || targetGuest?.invitationToken
+    );
+    setGuests(prev => (Array.isArray(prev) ? prev : []).map(g => (g.id === updated.id ? updated : g)));
     const updatedEv = await eventsService.getMyEvent();
     setEvent(updatedEv);
+  };
+
+  const handleDeleteGuest = async (guestId: string) => {
+    if (!confirm(lang === 'ar' ? 'هل أنت متأكد من حذف هذا الضيف؟' : 'Are you sure you want to delete this guest?')) return;
+    try {
+      await eventsService.deleteGuest(guestId, event?.id);
+      setGuests(prev => (Array.isArray(prev) ? prev : []).filter(g => g.id !== guestId));
+      const updatedEv = await eventsService.getMyEvent();
+      setEvent(updatedEv);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to delete guest');
+    }
+  };
+
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !event) return;
+    try {
+      setIsImportingExcel(true);
+      const res = await eventsService.importExcel(file, event.id);
+      alert(lang === 'ar' ? `تم استيراد ${res.totalImported} ضيف بنجاح` : `Successfully imported ${res.totalImported} guests`);
+      const refreshedGuests = await eventsService.getGuests(event.id);
+      setGuests(Array.isArray(refreshedGuests) ? refreshedGuests : []);
+      const updatedEv = await eventsService.getMyEvent();
+      setEvent(updatedEv);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to import Excel file');
+    } finally {
+      setIsImportingExcel(false);
+      if (excelInputRef.current) excelInputRef.current.value = '';
+    }
+  };
+
+  const handleExportExcel = async () => {
+    if (!event) return;
+    try {
+      setIsExportingExcel(true);
+      const blob = await eventsService.exportExcel(event.id);
+      triggerFileDownload(blob, `guests-${event.slug || event.id}.xlsx`);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to export Excel sheet');
+    } finally {
+      setIsExportingExcel(false);
+    }
   };
 
   const handleSaveEvent = async (e: FormEvent) => {
     e.preventDefault();
     if (!event) return;
-    const updated = await eventsService.updateEvent({
-      event_title: editForm.title,
-      event_date: new Date(editForm.date).toISOString(),
-      location_name: editForm.location,
+    const updated = await eventsService.updateEvent(event.id, {
+      eventTitle: editForm.title,
+      eventDate: new Date(editForm.date).toISOString(),
+      locationName: editForm.location,
     });
     setEvent(updated);
     setIsEditModalOpen(false);
@@ -190,29 +303,31 @@ export function DashboardPage() {
     e.preventDefault();
     if (!guestForm.name.trim()) return;
 
-    const added = await eventsService.addGuest({
-      guest_name: guestForm.name.trim(),
-      phone_number: guestForm.phone.trim() || null,
-      status: 'PENDING',
-      companions_allowed: Number(guestForm.companions) || 0,
-      companions_confirmed: 0,
-      checked_in: false,
-      notes: guestForm.notes.trim() || null,
-    });
+    try {
+      const added = await eventsService.addGuest({
+        guestName: guestForm.name.trim(),
+        phoneNumber: guestForm.phone.trim() || null,
+        companionsAllowed: Number(guestForm.companions) || 0,
+        notes: guestForm.notes.trim() || null,
+      }, event?.id);
 
-    setGuests(prev => [added, ...prev]);
-    const updatedEv = await eventsService.getMyEvent();
-    setEvent(updatedEv);
-    setGuestForm({ name: '', phone: '', companions: 0, notes: '' });
-    setIsAddGuestOpen(false);
+      setGuests(prev => [added, ...prev]);
+      const updatedEv = await eventsService.getMyEvent();
+      setEvent(updatedEv);
+      setGuestForm({ name: '', phone: '', companions: 0, notes: '' });
+      setIsAddGuestOpen(false);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to add guest');
+    }
   };
 
   const filteredGuests = useMemo(() => {
-    return guests.filter(g => {
+    const list = Array.isArray(guests) ? guests : [];
+    return list.filter(g => {
       const matchFilter = filter === 'ALL' || g.status === filter;
       const matchSearch =
         !search.trim() ||
-        g.guest_name.toLowerCase().includes(search.toLowerCase()) ||
+        (g.guest_name && g.guest_name.toLowerCase().includes(search.toLowerCase())) ||
         (g.phone_number && g.phone_number.includes(search));
       return matchFilter && matchSearch;
     });
@@ -402,6 +517,26 @@ export function DashboardPage() {
                   }}
                 >
                   <EditIcon /> {t.dashboard.editEvent}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsCheckoutOpen(true)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    background: event.status === 'DRAFT' ? 'var(--teal)' : 'var(--sand-card)',
+                    color: event.status === 'DRAFT' ? 'var(--ivory)' : 'var(--teal)',
+                    border: event.status === 'DRAFT' ? 'none' : '1px solid var(--border-soft)',
+                    borderRadius: 'var(--radius-pill)',
+                    padding: '0.65rem 1.3rem',
+                    fontWeight: 600,
+                    fontSize: '0.92rem',
+                    cursor: 'pointer',
+                    boxShadow: event.status === 'DRAFT' ? '0 4px 14px rgba(18, 54, 58, 0.25)' : 'var(--shadow-xs)',
+                  }}
+                >
+                  <span>💳</span> {t.billing.activateEvent}
                 </button>
               </div>
             </div>
@@ -599,26 +734,77 @@ export function DashboardPage() {
             <h2 style={{ fontSize: '1.35rem', color: 'var(--cocoa)', margin: 0 }}>
               {t.dashboard.guestsTitle} ({filteredGuests.length})
             </h2>
-            <button
-              type="button"
-              onClick={() => setIsAddGuestOpen(true)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                background: 'var(--gradient-rose)',
-                color: 'var(--ivory)',
-                border: 'none',
-                borderRadius: 'var(--radius-pill)',
-                padding: '0.6rem 1.25rem',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-                cursor: 'pointer',
-                boxShadow: 'var(--shadow-sm)',
-              }}
-            >
-              <PlusIcon /> {t.dashboard.addGuest}
-            </button>
+            <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                type="file"
+                ref={excelInputRef}
+                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                style={{ display: 'none' }}
+                onChange={handleImportExcel}
+              />
+              <button
+                type="button"
+                onClick={() => excelInputRef.current?.click()}
+                disabled={isImportingExcel}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: 'var(--ivory)',
+                  color: 'var(--cocoa)',
+                  border: '1px solid var(--border-soft)',
+                  borderRadius: 'var(--radius-pill)',
+                  padding: '0.55rem 1rem',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  cursor: isImportingExcel ? 'not-allowed' : 'pointer',
+                  opacity: isImportingExcel ? 0.6 : 1,
+                }}
+              >
+                📥 {isImportingExcel ? 'Importing…' : (lang === 'ar' ? 'استيراد Excel' : 'Import Excel')}
+              </button>
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                disabled={isExportingExcel}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: 'var(--ivory)',
+                  color: 'var(--cocoa)',
+                  border: '1px solid var(--border-soft)',
+                  borderRadius: 'var(--radius-pill)',
+                  padding: '0.55rem 1rem',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  cursor: isExportingExcel ? 'not-allowed' : 'pointer',
+                  opacity: isExportingExcel ? 0.6 : 1,
+                }}
+              >
+                📤 {isExportingExcel ? 'Exporting…' : (lang === 'ar' ? 'تصدير Excel' : 'Export Excel')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsAddGuestOpen(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: 'var(--gradient-rose)',
+                  color: 'var(--ivory)',
+                  border: 'none',
+                  borderRadius: 'var(--radius-pill)',
+                  padding: '0.6rem 1.25rem',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  boxShadow: 'var(--shadow-sm)',
+                }}
+              >
+                <PlusIcon /> {t.dashboard.addGuest}
+              </button>
+            </div>
           </div>
 
           {/* Search & Filter Toolbar */}
@@ -704,12 +890,13 @@ export function DashboardPage() {
                   <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center' }}>{t.dashboard.colCompanions}</th>
                   <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center' }}>{t.dashboard.colStatus}</th>
                   <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center' }}>{t.dashboard.colCheckedIn}</th>
+                  <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center' }}>{t.dashboard.colActions}</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredGuests.length === 0 ? (
+                {!Array.isArray(filteredGuests) || filteredGuests.length === 0 ? (
                   <tr>
-                    <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: 'var(--taupe)' }}>
+                    <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: 'var(--taupe)' }}>
                       {t.dashboard.noGuestsFound}
                     </td>
                   </tr>
@@ -776,6 +963,44 @@ export function DashboardPage() {
                           {g.checked_in ? `✓ ${t.dashboard.checkedIn}` : t.dashboard.checkInAction}
                         </button>
                       </td>
+                      <td style={{ padding: '0.85rem 0.5rem', textAlign: 'center' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <button
+                            type="button"
+                            title={lang === 'ar' ? 'نسخ رابط الدعوة الخاص' : 'Copy guest invitation link'}
+                            onClick={() => handleCopyGuestLink(g)}
+                            style={{
+                              background: copiedGuestId === g.id ? 'var(--cocoa)' : 'transparent',
+                              color: copiedGuestId === g.id ? 'var(--ivory)' : 'var(--taupe)',
+                              border: '1px solid var(--border-soft)',
+                              borderRadius: 'var(--radius-pill)',
+                              padding: '0.25rem 0.55rem',
+                              fontSize: '0.75rem',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                            }}
+                          >
+                            {copiedGuestId === g.id ? '✓' : '🔗'}
+                          </button>
+                          <button
+                            type="button"
+                            title={lang === 'ar' ? 'حذف الضيف' : 'Delete guest'}
+                            onClick={() => handleDeleteGuest(g.id)}
+                            style={{
+                              background: 'transparent',
+                              color: '#b0564f',
+                              border: '1px solid rgba(176,86,79,0.3)',
+                              borderRadius: 'var(--radius-pill)',
+                              padding: '0.25rem 0.5rem',
+                              fontSize: '0.75rem',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                            }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -806,21 +1031,27 @@ export function DashboardPage() {
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', maxHeight: '380px', overflowY: 'auto' }}>
-              {wishes.map(w => (
-                <div key={w.id} style={{
-                  background: 'var(--ivory-pale)',
-                  border: '1px solid var(--border-fine)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '1rem',
-                  fontSize: '0.9rem',
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                    <span style={{ fontWeight: 600, color: 'var(--cocoa)' }}>{w.author_name}</span>
-                    <span style={{ color: 'var(--rose-gold)' }}><HeartIcon /></span>
+              {Array.isArray(wishes) && wishes.length > 0 ? (
+                wishes.map(w => (
+                  <div key={w.id} style={{
+                    background: 'var(--ivory-pale)',
+                    border: '1px solid var(--border-fine)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '1rem',
+                    fontSize: '0.9rem',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                      <span style={{ fontWeight: 600, color: 'var(--cocoa)' }}>{w.author_name}</span>
+                      <span style={{ color: 'var(--rose-gold)' }}><HeartIcon /></span>
+                    </div>
+                    <p style={{ color: 'var(--taupe)', lineHeight: 1.5, margin: 0 }}>{w.message}</p>
                   </div>
-                  <p style={{ color: 'var(--taupe)', lineHeight: 1.5, margin: 0 }}>{w.message}</p>
+                ))
+              ) : (
+                <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--taupe)', fontSize: '0.88rem' }}>
+                  {lang === 'ar' ? 'لا توجد رسائل تهنئة حتى الآن' : 'No guestbook wishes yet'}
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -836,9 +1067,17 @@ export function DashboardPage() {
               <h2 style={{ fontSize: '1.25rem', color: 'var(--cocoa)', margin: 0 }}>
                 📸 {t.dashboard.galleryTitle}
               </h2>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/jpeg,image/png,image/webp"
+                style={{ display: 'none' }}
+                onChange={handleFileSelect}
+              />
               <button
                 type="button"
-                onClick={() => alert('Photo upload will connect to Cloudflare R2 presigned URLs in the next phase.')}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
                 style={{
                   background: 'none',
                   border: '1px dashed var(--border-soft)',
@@ -847,10 +1086,11 @@ export function DashboardPage() {
                   fontSize: '0.8rem',
                   color: 'var(--rose-gold-deep)',
                   fontWeight: 600,
-                  cursor: 'pointer',
+                  cursor: isUploading ? 'not-allowed' : 'pointer',
+                  opacity: isUploading ? 0.6 : 1,
                 }}
               >
-                + {t.dashboard.uploadPhoto}
+                {isUploading ? 'Uploading…' : `+ ${t.dashboard.uploadPhoto}`}
               </button>
             </div>
             <p style={{ fontSize: '0.85rem', color: 'var(--taupe)', marginBottom: '1.25rem' }}>
@@ -858,7 +1098,7 @@ export function DashboardPage() {
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
-              {event?.gallery.map(img => (
+              {(Array.isArray(event?.gallery) ? event.gallery : []).map(img => (
                 <div key={img.id} style={{
                   borderRadius: 'var(--radius-md)',
                   overflow: 'hidden',
@@ -873,6 +1113,134 @@ export function DashboardPage() {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Billing & Orders History Section */}
+          <div style={{
+            gridColumn: '1 / -1',
+            background: 'var(--ivory)',
+            border: '1px solid var(--border-soft)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '1.75rem',
+            boxShadow: 'var(--shadow-sm)',
+            marginTop: '1rem',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h2 style={{ fontSize: '1.25rem', color: 'var(--cocoa)', margin: 0 }}>
+                  💳 {t.billing.ordersHistoryTitle}
+                </h2>
+                <p style={{ fontSize: '0.85rem', color: 'var(--taupe)', marginTop: '0.25rem', margin: '0.25rem 0 0 0' }}>
+                  {event?.status === 'DRAFT' ? t.billing.orderStatusDraft : t.billing.pricingSubtitle}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCheckoutOpen(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  background: 'var(--teal)',
+                  color: 'var(--ivory)',
+                  border: 'none',
+                  borderRadius: 'var(--radius-pill)',
+                  padding: '0.5rem 1.2rem',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                + {t.billing.activateEvent}
+              </button>
+            </div>
+
+            {!Array.isArray(orders) || orders.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--taupe)', fontSize: '0.9rem' }}>
+                <p style={{ margin: 0 }}>{t.billing.noOrders}</p>
+                {event?.status === 'DRAFT' && (
+                  <button
+                    type="button"
+                    onClick={() => setIsCheckoutOpen(true)}
+                    style={{
+                      marginTop: '0.75rem',
+                      background: 'none',
+                      border: '1px dashed var(--brass)',
+                      color: 'var(--teal)',
+                      padding: '0.45rem 1rem',
+                      borderRadius: 'var(--radius-pill)',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {t.billing.proceedToPayment} →
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border-soft)', textAlign: lang === 'ar' ? 'right' : 'left', color: 'var(--taupe)' }}>
+                      <th style={{ padding: '0.75rem' }}>{t.billing.colOrderNumber}</th>
+                      <th style={{ padding: '0.75rem' }}>{t.billing.colAmount}</th>
+                      <th style={{ padding: '0.75rem' }}>{t.billing.colStatus}</th>
+                      <th style={{ padding: '0.75rem' }}>{t.billing.colReceipt}</th>
+                      <th style={{ padding: '0.75rem' }}>{t.billing.colDate}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders.map((ord) => {
+                      const isPending = ord.status === 'PENDING';
+                      const isCompleted = ord.status === 'COMPLETED' || ord.status === 'VERIFIED';
+                      const receiptUrl = ord.manualVerification?.receipt_image_url || ord.manualVerification?.receiptImageUrl;
+
+                      return (
+                        <tr key={ord.id} style={{ borderBottom: '1px solid var(--border-fine)' }}>
+                          <td style={{ padding: '0.75rem', fontWeight: 600, color: 'var(--cocoa)' }}>
+                            {ord.orderNumber || ord.id.slice(0, 8).toUpperCase()}
+                          </td>
+                          <td style={{ padding: '0.75rem', color: 'var(--teal)', fontWeight: 600 }}>
+                            {ord.amount} {ord.currency}
+                          </td>
+                          <td style={{ padding: '0.75rem' }}>
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '0.2rem 0.65rem',
+                              borderRadius: 'var(--radius-pill)',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              background: isPending ? 'rgba(184, 138, 74, 0.15)' : isCompleted ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                              color: isPending ? 'var(--brass)' : isCompleted ? '#166534' : '#991b1b',
+                            }}>
+                              {isPending ? `⏳ ${t.billing.orderStatusPending}` : isCompleted ? `✓ ${t.billing.orderStatusCompleted}` : `✕ ${t.billing.orderStatusRejected}`}
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.75rem' }}>
+                            {receiptUrl ? (
+                              <a
+                                href={receiptUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ color: 'var(--brass)', textDecoration: 'underline', fontSize: '0.8rem' }}
+                              >
+                                {t.billing.viewReceipt} ↗
+                              </a>
+                            ) : (
+                              <span style={{ color: 'var(--taupe)', fontSize: '0.8rem' }}>—</span>
+                            )}
+                          </td>
+                          <td style={{ padding: '0.75rem', color: 'var(--taupe)', fontSize: '0.8rem' }}>
+                            {new Date(ord.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-JO' : 'en-US')}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </main>
@@ -1080,6 +1448,22 @@ export function DashboardPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* CliQ Billing & Payment Modal */}
+      {event && (
+        <CliqCheckoutModal
+          isOpen={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          eventId={event.id}
+          eventTitle={event.event_title}
+          onOrderCompleted={() => {
+            billingApi.getMyOrders().then(updateOrdersState).catch(() => setOrders([]));
+            eventsService.getMyEvent().then(ev => {
+              if (ev) setEvent(ev);
+            }).catch(() => {});
+          }}
+        />
       )}
     </div>
   );

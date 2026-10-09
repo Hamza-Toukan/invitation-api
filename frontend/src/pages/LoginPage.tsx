@@ -2,6 +2,7 @@ import { useState, useEffect, useId, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLang } from '../i18n/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { authService } from '../services/authService';
 import { Botanical } from '../components/Botanical';
 import { BrandLogo } from '../components/BrandLogo';
 import { Btn } from '../components/Btn';
@@ -131,9 +132,12 @@ export function LoginPage() {
 
     setLoading(true);
     try {
-      const user = await verifyOtp(phone.trim(), code.trim());
-      if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
-        navigate('/admin/clients', { replace: true });
+      const cleanPhone = phone.trim().replace(/[\s-]/g, '');
+      const user = await verifyOtp(cleanPhone, code.trim());
+      const role = user?.role || authService.getCurrentUser()?.role;
+
+      if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
+        navigate('/admin/orders', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });
       }

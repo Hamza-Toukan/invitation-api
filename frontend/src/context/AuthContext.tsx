@@ -27,8 +27,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const verifyOtp = useCallback(async (phone: string, code: string) => {
     const res = await authService.verifyOtp(phone, code);
-    setUser(res.user);
-    return res.user;
+    const verifiedUser: UserProfile = res?.user || {
+      id: '',
+      phoneNumber: phone,
+      role: 'HOST',
+    };
+    setUser(verifiedUser);
+    return verifiedUser;
   }, []);
 
   const logout = useCallback(() => {

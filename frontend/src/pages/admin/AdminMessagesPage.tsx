@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLang } from '../../i18n/LanguageContext';
 import { AdminLayout } from './AdminLayout';
-import { mockEventsService } from '../../services/mockEventsService';
+import { eventsService } from '../../services/eventsService';
 import type { GuestWish } from '../../services/types';
 
 export function AdminMessagesPage() {
@@ -9,11 +9,11 @@ export function AdminMessagesPage() {
   const [wishes, setWishes] = useState<GuestWish[]>([]);
 
   useEffect(() => {
-    mockEventsService.getWishes().then(setWishes);
+    eventsService.getWishes().then(setWishes);
   }, []);
 
   const handleToggle = async (wishId: string) => {
-    const updated = await mockEventsService.toggleWishApproval(wishId);
+    const updated = await eventsService.toggleWishApproval(wishId);
     setWishes(prev => prev.map(w => (w.id === updated.id ? updated : w)));
   };
 

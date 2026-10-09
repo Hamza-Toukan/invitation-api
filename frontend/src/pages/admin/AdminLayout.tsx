@@ -25,6 +25,13 @@ const MessageIcon = () => (
   </svg>
 );
 
+const CreditCardIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="5" width="20" height="14" rx="2" />
+    <line x1="2" y1="10" x2="22" y2="10" />
+  </svg>
+);
+
 const LogoutIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M15 5h3a1.5 1.5 0 0 1 1.5 1.5v11A1.5 1.5 0 0 1 18 19h-3" />
@@ -45,6 +52,7 @@ export function AdminLayout({ title, subtitle, children }: AdminLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   const navLinks = [
+    { to: '/admin/orders', label: t.admin.nav.orders, icon: <CreditCardIcon /> },
     { to: '/admin/clients', label: t.admin.nav.clients, icon: <UsersIcon /> },
     { to: '/admin/guests', label: t.admin.nav.guests, icon: <CalendarIcon /> },
     { to: '/admin/messages', label: t.admin.nav.messages, icon: <MessageIcon /> },

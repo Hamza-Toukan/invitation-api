@@ -30,6 +30,7 @@ export function Header() {
     { id: 'features', label: t.nav.features },
     { id: 'how', label: t.nav.how },
     { id: 'templates', label: t.nav.templates },
+    { id: 'pricing', label: t.nav.pricing },
     { id: 'faq', label: t.nav.faq },
   ];
 

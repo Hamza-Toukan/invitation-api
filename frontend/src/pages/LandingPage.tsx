@@ -9,6 +9,7 @@ import { useReveal } from '../hooks/useReveal';
 import { Link } from 'react-router-dom';
 import { BrandLogo } from '../components/BrandLogo';
 import { EnvelopeMockup } from '../components/EnvelopeMockup';
+import { billingApi, type PricingPlan, type CouponValidationResponse } from '../services/api/billing.api';
 
 const WHATSAPP = 'https://wa.me/[WHATSAPP_NUMBER]';
 
@@ -477,6 +478,228 @@ function FaqItem({ item, isOpen, onToggle, questionId, answerId }: {
   );
 }
 
+// Pricing Plans Section
+function PricingSection() {
+  const { lang, t } = useLang();
+  const isAr = lang === 'ar';
+  const bT = t.billing;
+  const ref = useReveal({ group: true });
+
+  const [plans, setPlans] = useState<PricingPlan[]>([]);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponRes, setCouponRes] = useState<CouponValidationResponse | null>(null);
+  const [couponErr, setCouponErr] = useState<string | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
+
+  useEffect(() => {
+    billingApi.getPlans().then((data) => {
+      if (Array.isArray(data) && data.length > 0) setPlans(data);
+    }).catch(() => {});
+  }, []);
+
+  const displayPlans = Array.isArray(plans) && plans.length > 0 ? plans : [
+    {
+      id: 'basic-tier',
+      slug: 'basic-tier',
+      name: isAr ? 'باقة الفرح الأساسية' : 'Basic Celebration Suite',
+      price: 15,
+      currency: 'JOD',
+      max_guests: 150,
+      features: {
+        en: [
+          'Up to 150 unique guest invitations',
+          'Interactive RSVP tracking',
+          'Custom music playback',
+          'Google Maps venue integration',
+        ],
+        ar: [
+          'حتى 150 دعوة مخصصة للضيوف',
+          'تتبع تأكيد الحضور (RSVP) لحظياً',
+          'تشغيل موسيقى الخلفية المخصصة',
+          'موقع القاعة عبر خرائط Google',
+        ],
+      },
+      is_active: true,
+    },
+    {
+      id: 'premium-vip',
+      slug: 'premium-vip',
+      name: isAr ? 'الباقة الملكية الفاخرة' : 'Royal VIP Suite',
+      price: 35,
+      currency: 'JOD',
+      max_guests: 500,
+      features: {
+        en: [
+          'Up to 500 unique guest invitations',
+          'Photo Memories Gallery (up to 15 photos)',
+          'VIP Entry QR Codes & Table assignments',
+          'Live attendance scanner for reception desk',
+          'Export RSVP and guest list to Excel/PDF',
+        ],
+        ar: [
+          'حتى 500 دعوة مخصصة للضيوف',
+          'معرض صور الذكريات (حتى 15 صورة)',
+          'بطاقات دخول VIP مع QR Code وتوزيع الطاولات',
+          'نظام مسح الحضور المباشر لموظفي الاستقبال',
+          'تصدير قائمة الحضور إلى Excel و PDF',
+        ],
+      },
+      is_active: true,
+    },
+  ];
+
+  const handleValidateCoupon = async (planId: string) => {
+    if (!couponCode.trim()) return;
+    setIsValidating(true);
+    setCouponErr(null);
+    try {
+      const res = await billingApi.validateCoupon({
+        code: couponCode.trim(),
+        planId,
+      });
+      setCouponRes(res);
+    } catch (err: any) {
+      setCouponRes(null);
+      setCouponErr(err?.message || bT.couponInvalid);
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  return (
+    <section className="section pricing py-16 md:py-24" id="pricing" ref={ref as React.RefObject<HTMLElement>}>
+      <div className="container max-w-5xl mx-auto px-4 sm:px-6">
+        <header className="text-center mb-12">
+          <p className="eyebrow text-brass font-semibold uppercase tracking-widest text-xs reveal" data-reveal>
+            {isAr ? 'الباقات والأسعار' : 'Pricing Plans'}
+          </p>
+          <h2 className="font-heading text-3xl md:text-4xl text-teal mt-2 mb-3 reveal" data-reveal>
+            {bT.pricingTitle}
+          </h2>
+          <p className="text-ink/70 text-sm md:text-base max-w-xl mx-auto reveal" data-reveal>
+            {bT.pricingSubtitle}
+          </p>
+        </header>
+
+        {/* Promo Code Live Calculator */}
+        <div className="max-w-md mx-auto mb-10 text-center">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleValidateCoupon(displayPlans[0].id);
+            }}
+            className="flex gap-2"
+          >
+            <input
+              type="text"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              placeholder={bT.couponPlaceholder}
+              className="flex-1 px-4 py-2 rounded-xl bg-sand-card border border-sand-border text-xs text-ink focus:outline-none focus:border-brass uppercase tracking-wider"
+            />
+            <button
+              type="submit"
+              disabled={!couponCode.trim() || isValidating}
+              className="px-4 py-2 rounded-xl bg-brass text-ivory text-xs font-semibold hover:bg-brass/90 disabled:opacity-50 transition-colors"
+            >
+              {isValidating ? bT.applyingCoupon : bT.applyCoupon}
+            </button>
+          </form>
+          {couponRes && (
+            <p className="text-xs text-teal font-medium mt-2">
+              {bT.couponApplied
+                .replace('{discount}', String(couponRes.discountAmount))
+                .replace('{currency}', couponRes.currency)}
+            </p>
+          )}
+          {couponErr && (
+            <p className="text-xs text-clay font-medium mt-2">{couponErr}</p>
+          )}
+        </div>
+
+        {/* Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 mb-12">
+          {displayPlans.map((plan, idx) => {
+            const isVip = idx === 1;
+            const features =
+              typeof plan.features === 'object' && plan.features !== null
+                ? (isAr ? (plan.features as any).ar : (plan.features as any).en) || []
+                : [];
+            const planFinalPrice =
+              couponRes && couponRes.valid && couponRes.originalPrice === Number(plan.price)
+                ? couponRes.finalTotal
+                : plan.price;
+
+            return (
+              <div
+                key={plan.id}
+                className={`rounded-3xl p-6 sm:p-8 border-2 transition-all duration-300 relative flex flex-col justify-between ${
+                  isVip
+                    ? 'bg-sand-card border-brass shadow-xl shadow-brass/10'
+                    : 'bg-ivory border-sand-border shadow-sm'
+                }`}
+              >
+                {isVip && (
+                  <span className="absolute -top-3.5 start-6 bg-brass text-ivory text-[11px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                    {isAr ? 'الأكثر طلباً' : 'Most Popular'}
+                  </span>
+                )}
+
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-heading text-xl md:text-2xl text-teal">{plan.name}</h3>
+                  </div>
+
+                  <div className="flex items-baseline gap-2 my-4">
+                    <span className="font-heading text-4xl font-bold text-teal">{planFinalPrice}</span>
+                    <span className="text-sm font-semibold text-brass">{plan.currency}</span>
+                    <span className="text-xs text-ink/60">{bT.perEvent}</span>
+                  </div>
+
+                  {Array.isArray(features) && features.length > 0 && (
+                    <ul className="space-y-2.5 my-6 text-xs sm:text-sm text-ink/80">
+                      {features.map((feat: string, fIdx: number) => (
+                        <li key={fIdx} className="flex items-start gap-2.5">
+                          <span className="text-brass font-bold">✓</span>
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="pt-6 border-t border-sand-border space-y-3">
+                  <Btn
+                    to="/login"
+                    variant={isVip ? 'primary' : 'secondary'}
+                    size="md"
+                    className="w-full text-center justify-center"
+                  >
+                    {isAr ? 'ابدأ بهذه الباقة' : 'Select Plan'}
+                  </Btn>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* CliQ Acceptance Banner */}
+        <div className="bg-sand-card border border-sand-border rounded-2xl p-6 text-center max-w-2xl mx-auto shadow-sm space-y-2">
+          <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-teal">
+            <span className="w-2 h-2 rounded-full bg-brass" />
+            <span>{isAr ? 'الدفع الآمن والسهل عبر كليك (CliQ)' : 'Seamless Jordanian CliQ Payment'}</span>
+          </div>
+          <p className="text-xs text-ink/70">
+            {isAr
+              ? 'ندعم التحويل المباشر عبر كليك بالاسم المستعار MIRA مع التحقق السريع من الإشعار وتفعيل الدعوة خلال دقائق.'
+              : 'Direct transfers supported via Jordanian CliQ (Alias: MIRA) with quick receipt verification and instant activation.'}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // FAQ Section
 function FaqSection() {
   const { t } = useLang();
@@ -558,6 +781,7 @@ export function LandingPage() {
         <TemplatesSection />
         <WhySection />
         <TestimonialsSection />
+        <PricingSection />
         <FaqSection />
         <FinalCta />
       </main>

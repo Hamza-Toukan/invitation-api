@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLang } from '../../i18n/LanguageContext';
 import { AdminLayout } from './AdminLayout';
-import { mockEventsService } from '../../services/mockEventsService';
+import { adminApi } from '../../services/api/admin.api';
 import type { ClientOverview } from '../../services/types';
 
 export function AdminClientsPage() {
@@ -11,7 +11,9 @@ export function AdminClientsPage() {
   const [clients, setClients] = useState<ClientOverview[]>([]);
 
   useEffect(() => {
-    mockEventsService.getClients().then(setClients);
+    adminApi.getClients().then((data) => {
+      if (Array.isArray(data)) setClients(data);
+    });
   }, []);
 
   const totalGuests = clients.reduce((acc, c) => acc + c.totalGuests, 0);

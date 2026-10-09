@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLang } from '../../i18n/LanguageContext';
 import { AdminLayout } from './AdminLayout';
-import { mockEventsService } from '../../services/mockEventsService';
+import { eventsService } from '../../services/eventsService';
 import type { Guest } from '../../services/types';
 
 export function AdminGuestsPage() {
@@ -10,7 +10,7 @@ export function AdminGuestsPage() {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    mockEventsService.getGuests().then(setGuests);
+    eventsService.getGuests().then(setGuests);
   }, []);
 
   const filtered = guests.filter(
