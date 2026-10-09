@@ -161,7 +161,7 @@ export function DashboardPage() {
   }, [event]);
 
   const handleCopyLink = () => {
-    const link = `https://invite-studio-bax.pages.dev/demo/amalfi-rose/`;
+    const link = event ? `${window.location.origin}/invite/${event.slug || event.id}` : window.location.origin;
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -355,7 +355,7 @@ export function DashboardPage() {
               {/* Action Buttons */}
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                 <Btn
-                  href={event.template.demoUrl || 'https://invitations-a8x.pages.dev/demo/amalfi-rose/'}
+                  href={event.slug ? `/invite/${event.slug}` : (event.template.demoUrl && !event.template.demoUrl.includes('pages.dev') ? event.template.demoUrl : `/invite/${event.id}`)}
                   target="_blank"
                   rel="noopener noreferrer"
                   variant="primary"

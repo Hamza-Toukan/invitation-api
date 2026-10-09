@@ -2,7 +2,18 @@ import { authApi } from './api/auth.api';
 import { mockAuthService } from './mockAuthService';
 import type { AuthTokens, UserProfile } from './types';
 
-const STORAGE_KEY_AUTH = 'invite-studio.auth';
+const PRIMARY_STORAGE_KEY = 'mira.auth';
+const LEGACY_STORAGE_KEY = 'invite-studio.auth';
+
+function getStoredAuth(): AuthTokens | null {
+  try {
+    const raw = localStorage.getItem(PRIMARY_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
 
 export const authService = {
   /**
@@ -30,25 +41,13 @@ export const authService = {
   },
 
   getCurrentUser(): UserProfile | null {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY_AUTH);
-      if (!raw) return null;
-      const parsed: AuthTokens = JSON.parse(raw);
-      return parsed.user;
-    } catch {
-      return null;
-    }
+    const parsed = getStoredAuth();
+    return parsed?.user || null;
   },
 
   getAccessToken(): string | null {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY_AUTH);
-      if (!raw) return null;
-      const parsed: AuthTokens = JSON.parse(raw);
-      return parsed.accessToken;
-    } catch {
-      return null;
-    }
+    const parsed = getStoredAuth();
+    return parsed?.accessToken || null;
   },
 
   logout(): void {

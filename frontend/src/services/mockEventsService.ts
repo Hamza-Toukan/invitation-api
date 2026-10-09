@@ -28,7 +28,7 @@ const INITIAL_EVENT: EventDetails = {
     category: 'WEDDING',
     preview_image_url: '/templates/romance.jpg',
     hasLiveDemo: true,
-    demoUrl: 'https://invitations-a8x.pages.dev/demo/amalfi-rose/',
+    demoUrl: '/invite/amalfi-rose',
   },
   gallery: [
     { id: 'g1', image_url: '/templates/romance.jpg', display_order: 1, createdAt: '2026-09-01T12:00:00.000Z' },

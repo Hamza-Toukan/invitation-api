@@ -28,7 +28,7 @@ export const authApi = {
 
     // Persist authenticated session
     try {
-      localStorage.setItem('invite-studio.auth', JSON.stringify(res));
+      localStorage.setItem('mira.auth', JSON.stringify(res));
     } catch {}
 
     return res;
@@ -46,6 +46,7 @@ export const authApi = {
    */
   logout(): void {
     try {
+      localStorage.removeItem('mira.auth');
       localStorage.removeItem('invite-studio.auth');
     } catch {}
   },

@@ -11,7 +11,7 @@
   <script>
     ; (function () {
       try {
-        var saved = localStorage.getItem('invite-studio.lang')
+        var saved = localStorage.getItem('mira.lang') || localStorage.getItem('invite-studio.lang')
         if (saved !== 'ar' && saved !== 'en') return
         var html = document.documentElement
         html.lang = saved
@@ -20,34 +20,34 @@
     })()
   </script>
 
-  <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png" />
-  <link rel="icon" type="image/png" sizes="48x48" href="/brand/favicon-48.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png" />
   <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#F5DCD8" />
+  <meta name="theme-color" content="#12363A" />
 
-  <title>Invite Studio by Ali | دعوات رقمية تفاعلية فاخرة</title>
+  <title>Mira | ميرا للدعوات — دعوات إلكترونية تفاعلية</title>
   <meta name="description"
-    content="صمّمي دعوتك الرقمية التفاعلية بأسلوب فاخر ومخصص، مع الموسيقى، تأكيد الحضور، تفاصيل المناسبة، الخرائط والمزيد." />
+    content="ميرا للدعوات: دعوات رقمية تفاعلية بأسلوب عصري راقٍ — موسيقى، تأكيد حضور، وخرائط بلمسة واحدة." />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="Invite Studio by Sarah" />
-  <meta property="og:title" content="Invite Studio by Sarah | دعوات رقمية تفاعلية فاخرة" />
+  <meta property="og:site_name" content="Mira Invitations | ميرا للدعوات" />
+  <meta property="og:title" content="Mira | ميرا للدعوات — لحظتك بأجمل صورة" />
   <meta property="og:description"
-    content="صمّمي دعوتك الرقمية التفاعلية بأسلوب فاخر ومخصص، مع الموسيقى، تأكيد الحضور، تفاصيل المناسبة، الخرائط والمزيد." />
+    content="دعوات رقمية تفاعلية تفتحها بيدك: ظرف، موسيقى، وتأكيد حضور بلمسة واحدة." />
   <meta property="og:image" content="/brand/og-image.jpg" />
   <meta name="twitter:card" content="summary_large_image" />
 
-  <!-- Fonts — same as reference -->
+  <!-- Google Fonts: Fraunces & DM Sans (EN), Reem Kufi & IBM Plex Sans Arabic (AR) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Playfair+Display:wght@500;600;700&family=Manrope:wght@300;400;500;600;700&family=El+Messiri:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Pinyon+Script&display=swap"
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Reem+Kufi:wght@400..700&display=swap"
     rel="stylesheet" />
 </head>
 
-<body>
+<body class="bg-ivory text-ink font-body selection:bg-brass/20 selection:text-teal">
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>

@@ -6,7 +6,7 @@ import { Botanical } from '../components/Botanical';
 import { Btn } from '../components/Btn';
 import { useReveal } from '../hooks/useReveal';
 
-const WHATSAPP = 'https://wa.me/963956576033';
+const WHATSAPP = 'https://wa.me/[WHATSAPP_NUMBER]';
 const ArrowIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M5 12h14M13 6l6 6-6 6" />
@@ -19,8 +19,20 @@ const ExternalIcon = () => (
   </svg>
 );
 
-const TEMPLATES = [
-  { id: 1, slug: 'amalfi-rose', titleEn: 'Amalfi Rose', titleAr: 'ورد أمالفي', subtitleEn: 'Rose Terrace', subtitleAr: 'شرفة الورد', image: '/templates/romance.jpg', hasLiveDemo: true, demoUrl: 'https://invitations-a8x.pages.dev/demo/amalfi-rose/' },
+interface TemplateItem {
+  id: number;
+  slug: string;
+  titleEn: string;
+  titleAr: string;
+  subtitleEn: string;
+  subtitleAr: string;
+  image: string;
+  hasLiveDemo: boolean;
+  demoUrl?: string;
+}
+
+const TEMPLATES: TemplateItem[] = [
+  { id: 1, slug: 'amalfi-rose', titleEn: 'Amalfi Rose', titleAr: 'ورد أمالفي', subtitleEn: 'Rose Terrace', subtitleAr: 'شرفة الورد', image: '/templates/romance.jpg', hasLiveDemo: false },
   { id: 2, slug: 'golden-sunset', titleEn: 'Golden Sunset', titleAr: 'الغروب الذهبي', subtitleEn: 'Sunset Glow', subtitleAr: 'توهّج الغروب', image: '/templates/yellow.jpg', hasLiveDemo: false },
   { id: 3, slug: 'soft-blush', titleEn: 'Soft Blush', titleAr: 'الوردي الناعم', subtitleEn: 'Soft Floral', subtitleAr: 'زهور ناعمة', image: '/templates/white%20and%20pink.jpg', hasLiveDemo: false },
   { id: 4, slug: 'pink-floral', titleEn: 'Pink Floral', titleAr: 'الوردي المزهر', subtitleEn: 'Floral Daylight', subtitleAr: 'طابع زهري', image: '/templates/pink.jpg', hasLiveDemo: false },

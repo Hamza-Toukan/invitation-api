@@ -7,8 +7,8 @@ import { BrandLogo } from '../components/BrandLogo';
 import { Btn } from '../components/Btn';
 import { LangSwitch } from '../components/LangSwitch';
 
-const WHATSAPP = 'https://wa.me/963956576033';
-const INSTAGRAM = 'https://www.instagram.com/invite_studio_by_sarah';
+const WHATSAPP = 'https://wa.me/[WHATSAPP_NUMBER]';
+const INSTAGRAM = 'https://instagram.com/[INSTAGRAM_HANDLE]';
 
 const ArrowIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -59,15 +59,12 @@ function AuthPanel() {
         <span className="auth-panel__glow" />
         <Botanical variant="corner" className="auth-panel__deco" draw />
       </div>
-      <div className="auth-panel__content">
-        <figure className="auth-panel__logo">
-          <img
-            src="/logo1.jpg"
-            alt="Invite Studio by Sarah"
-            width={440}
-            height={440}
-            loading="lazy"
-          />
+      <div className="auth-panel__content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '2rem' }}>
+        <figure className="auth-panel__logo" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
+          <BrandLogo size="lg" />
+          <figcaption style={{ color: 'var(--brass)', fontFamily: 'var(--font-heading)', fontSize: '1.25rem', marginTop: '0.5rem', letterSpacing: '0.02em' }}>
+            {t.brand.tagline}
+          </figcaption>
         </figure>
       </div>
     </aside>

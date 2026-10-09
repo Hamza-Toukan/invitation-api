@@ -172,11 +172,11 @@ export function AdminLayout({ title, subtitle, children }: AdminLayoutProps) {
               placeItems: 'center',
               fontWeight: 700,
             }}>
-              {user?.name ? user.name.slice(0, 2).toUpperCase() : 'SA'}
+              {user?.name ? user.name.slice(0, 2).toUpperCase() : 'MI'}
             </span>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--cocoa)' }}>
-                {user?.name || 'Admin Sarah'}
+                {user?.name || 'Admin Mira'}
               </span>
               <span style={{ fontSize: '0.75rem', color: 'var(--rose-gold)' }}>
                 Administrator

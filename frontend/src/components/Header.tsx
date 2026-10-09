@@ -5,7 +5,7 @@ import { Btn } from './Btn';
 import { LangSwitch } from './LangSwitch';
 import { useLang } from '../i18n/LanguageContext';
 
-const WHATSAPP = 'https://wa.me/963956576033';
+const WHATSAPP = 'https://wa.me/+962790739763';
 const MenuIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M4 7h16M4 12h16M4 17h16" />

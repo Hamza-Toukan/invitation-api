@@ -4,7 +4,8 @@
  */
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
-const STORAGE_KEY_AUTH = 'invite-studio.auth';
+const STORAGE_KEY_AUTH = 'mira.auth';
+const LEGACY_STORAGE_KEY_AUTH = 'invite-studio.auth';
 
 export class ApiError extends Error {
   statusCode: number;
@@ -20,7 +21,7 @@ export class ApiError extends Error {
 
 export function getStoredToken(): string | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY_AUTH);
+    const raw = localStorage.getItem(STORAGE_KEY_AUTH) || localStorage.getItem(LEGACY_STORAGE_KEY_AUTH);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return parsed.accessToken || null;

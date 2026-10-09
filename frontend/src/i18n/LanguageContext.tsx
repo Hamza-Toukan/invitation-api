@@ -5,7 +5,8 @@ import type { Translations } from './en';
 
 type Lang = 'en' | 'ar';
 
-const STORAGE_KEY = 'invite-studio.lang';
+const PRIMARY_STORAGE_KEY = 'mira.lang';
+const LEGACY_STORAGE_KEY = 'invite-studio.lang';
 const translations: Record<Lang, Translations> = { en, ar };
 
 interface LanguageContextValue {
@@ -19,7 +20,7 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(PRIMARY_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
       if (saved === 'en' || saved === 'ar') return saved;
     } catch {}
     return 'ar';
@@ -28,7 +29,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLang = useCallback((l: Lang) => {
     setLangState(l);
     try {
-      localStorage.setItem(STORAGE_KEY, l);
+      localStorage.setItem(PRIMARY_STORAGE_KEY, l);
     } catch {}
   }, []);
 
@@ -36,11 +37,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     const metaTheme = document.querySelector('meta[name="theme-color"]');
-    if (!metaTheme) {
-      const m = document.createElement('meta');
-      m.name = 'theme-color';
-      m.content = '#F5DCD8';
-      document.head.appendChild(m);
+    if (metaTheme) {
+      metaTheme.setAttribute('content', '#12363A');
     }
   }, [lang]);
 

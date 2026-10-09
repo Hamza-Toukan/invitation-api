@@ -3,11 +3,11 @@ import { BrandLogo } from './BrandLogo';
 import { LangSwitch } from './LangSwitch';
 import { useLang } from '../i18n/LanguageContext';
 
-const WHATSAPP = 'https://wa.me/963956576033';
-const INSTAGRAM = 'https://www.instagram.com/invite_studio_by_sarah';
-const EMAIL = 'sarakhodari336@gmail.com';
-const GMAIL_LINK = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(EMAIL)}`;
-const YEAR = 2026;
+const WHATSAPP = 'https://wa.me/+962790739763';
+const INSTAGRAM = 'https://instagram.com/[INSTAGRAM_HANDLE]';
+const EMAIL = '[EMAIL]';
+const GMAIL_LINK = `mailto:${EMAIL}`;
+const YEAR = new Date().getFullYear();
 
 const EmailIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

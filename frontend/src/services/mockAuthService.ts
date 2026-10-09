@@ -1,6 +1,6 @@
 import type { AuthTokens, UserProfile } from './types';
 
-const STORAGE_KEY_AUTH = 'invite-studio.auth';
+const STORAGE_KEY_AUTH = 'mira.auth';
 const DEMO_CODE = '123456';
 
 export const mockAuthService = {
@@ -32,8 +32,8 @@ export const mockAuthService = {
     const user: UserProfile = {
       id: isAdmin ? 'admin-uuid-0001' : 'host-uuid-0001',
       phoneNumber,
-      name: isAdmin ? 'Admin Sarah' : 'Ahmad Toukan',
-      email: isAdmin ? 'admin@invitestudio.com' : 'ahmad@example.com',
+      name: isAdmin ? 'Admin Mira' : 'Ahmad Toukan',
+      email: isAdmin ? 'admin@mira-invitations.com' : 'ahmad@example.com',
       role: isAdmin ? 'ADMIN' : 'HOST',
     };
 

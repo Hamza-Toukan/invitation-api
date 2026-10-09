@@ -2,49 +2,49 @@ import { useLang } from '../i18n/LanguageContext';
 
 interface Props {
   variant?: 'wordmark' | 'monogram';
+  className?: string;
+  size?: 'sm' | 'md' | 'lg';
 }
 
-export function BrandLogo({ variant = 'wordmark' }: Props) {
+export function BrandLogo({ variant = 'wordmark', className = '', size = 'md' }: Props) {
   const { t } = useLang();
+
+  const svgSize = size === 'lg' ? 'w-14 h-14' : size === 'sm' ? 'w-7 h-7' : 'w-9 h-9';
+  const titleSize = size === 'lg' ? 'text-2xl' : size === 'sm' ? 'text-base' : 'text-lg';
+  const subtitleSize = size === 'lg' ? 'text-xs' : 'text-[0.72rem]';
+
   return (
-    <span className={`brand-logo ${variant === 'monogram' ? 'brand-logo--mono' : ''}`}>
-      {/* Monogram SVG */}
+    <span className={`inline-flex items-center gap-2.5 leading-none brand-logo ${variant === 'monogram' ? 'brand-logo--mono' : ''} ${className}`}>
+      {/* Official Mira SVG Mark */}
       <svg
-        className="brand-mono"
-        viewBox="0 0 52 61"
+        className={`${svgSize} shrink-0 rounded-xl shadow-subtle transition-transform hover:scale-105 duration-200`}
+        viewBox="0 0 64 64"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
       >
-        <defs>
-          <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#9e5e49" />
-            <stop offset="45%" stopColor="#d6a18c" />
-            <stop offset="75%" stopColor="#b8735a" />
-            <stop offset="100%" stopColor="#8c4f3d" />
-          </linearGradient>
-        </defs>
+        <rect width="64" height="64" rx="16" fill="#12363A" />
         <path
-          d="M26 4C14 4 5 13 5 25s8 18 18 22c2 .8 3 1.2 3 2s-1 1.4-3 2.2C12.5 54 5 60 5 60h42s-7.5-6-18-8.8c-2-.8-3-1.4-3-2.2s1-1.2 3-2C37 43 47 37 47 25S38 4 26 4Z"
-          fill="url(#logo-gradient)"
-          opacity="0.9"
+          d="M15 46V24l17 15 17-15v22"
+          fill="none"
+          stroke="#F6F0E6"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
-        <text
-          x="26"
-          y="32"
-          textAnchor="middle"
-          fontFamily="'Pinyon Script', cursive"
-          fontSize="22"
-          fill="#fff9f6"
-          opacity="0.95"
-        >
-          S
-        </text>
+        <path d="M32 8l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#B88A4A" />
       </svg>
+
       {variant === 'wordmark' && (
-        <span className="brand-logo__text">
-          <span className="brand-logo__name">{t.brand.name}</span>
-          <span className="brand-logo__by">{t.brand.by}</span>
+        <span className="flex flex-col brand-logo__text">
+          <span className={`flex items-center gap-1.5 font-bold text-teal ${titleSize} tracking-tight leading-tight`}>
+            <span className="font-fraunces font-bold text-teal tracking-normal">Mira</span>
+            <span className="text-brass/60 font-light text-sm">/</span>
+            <span className="font-reem-kufi font-bold text-teal">ميرا</span>
+          </span>
+          <span className={`${subtitleSize} tracking-wider text-brass font-medium uppercase mt-0.5`}>
+            {t.brand.by}
+          </span>
         </span>
       )}
     </span>

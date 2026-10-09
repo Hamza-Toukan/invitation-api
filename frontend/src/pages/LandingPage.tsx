@@ -7,8 +7,10 @@ import { Botanical } from '../components/Botanical';
 import { TypingTitle } from '../components/TypingTitle';
 import { useReveal } from '../hooks/useReveal';
 import { Link } from 'react-router-dom';
+import { BrandLogo } from '../components/BrandLogo';
+import { EnvelopeMockup } from '../components/EnvelopeMockup';
 
-const WHATSAPP = 'https://wa.me/963956576033';
+const WHATSAPP = 'https://wa.me/[WHATSAPP_NUMBER]';
 
 // Icons
 const ArrowIcon = () => (
@@ -78,40 +80,39 @@ function HeroSection() {
   const { t } = useLang();
   const ref = useReveal({ group: true });
   return (
-    <section className="hero" id="home" ref={ref as React.RefObject<HTMLElement>}>
-      <div className="hero__bg" aria-hidden="true">
+    <section className="hero relative overflow-hidden py-12 md:py-20 lg:py-28" id="home" ref={ref as React.RefObject<HTMLElement>}>
+      <div className="hero__bg absolute inset-0 pointer-events-none" aria-hidden="true">
         <span className="hero__glow hero__glow--1" />
         <span className="hero__glow hero__glow--2" />
         <Botanical variant="corner" className="hero__botanical" draw />
       </div>
-      <div className="hero__inner container">
-        <div className="hero__copy">
-          <p className="eyebrow hero__eyebrow reveal" data-reveal>{t.hero.eyebrow}</p>
-          <TypingTitle as="h1" text={t.hero.heading} className="hero__title reveal" data-reveal style={{ '--reveal-delay': '0.08s' } as React.CSSProperties} />
-          <p className="lead hero__lead reveal" data-reveal style={{ '--reveal-delay': '0.16s' } as React.CSSProperties}>{t.hero.paragraph}</p>
-          <div className="hero__actions reveal" data-reveal style={{ '--reveal-delay': '0.24s' } as React.CSSProperties}>
-            <Btn href={WHATSAPP} target="_blank" rel="noreferrer noopener" variant="primary" size="lg" icon={<ArrowIcon />}>
-              {t.hero.primary}
-            </Btn>
-            <Btn
-              type="button" variant="secondary" size="lg"
-              onClick={() => document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              {t.hero.secondary}
-            </Btn>
+      <div className="hero__inner container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+          <div className="hero__copy lg:col-span-7 flex flex-col items-start text-start">
+            <p className="eyebrow hero__eyebrow reveal" data-reveal>{t.hero.eyebrow}</p>
+            <TypingTitle as="h1" text={t.hero.heading} className="hero__title reveal font-heading font-medium tracking-tight mb-6" data-reveal style={{ '--reveal-delay': '0.08s' } as React.CSSProperties} />
+            <p className="lead hero__lead reveal text-lg sm:text-xl text-ink/85 leading-relaxed max-w-2xl mb-8" data-reveal style={{ '--reveal-delay': '0.16s' } as React.CSSProperties}>{t.hero.paragraph}</p>
+            <div className="hero__actions reveal flex flex-wrap gap-4 items-center mb-8" data-reveal style={{ '--reveal-delay': '0.24s' } as React.CSSProperties}>
+              <a
+                href={WHATSAPP}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="inline-flex items-center justify-center gap-2.5 bg-teal text-ivory rounded-full px-8 py-3.5 font-medium hover:opacity-95 transition-opacity shadow-sm hover:shadow"
+              >
+                <span>{t.hero.primary}</span>
+                <ArrowIcon />
+              </a>
+              <Link
+                to="/templates"
+                className="inline-flex items-center justify-center gap-2 border border-teal text-teal rounded-full px-8 py-3.5 font-medium hover:bg-teal/5 transition-colors"
+              >
+                {t.hero.secondary}
+              </Link>
+            </div>
+            <p className="hero__trust reveal text-sm text-ink/65 font-medium flex items-center gap-2" data-reveal style={{ '--reveal-delay': '0.32s' } as React.CSSProperties}>{t.hero.trust}</p>
           </div>
-          <p className="hero__trust reveal" data-reveal style={{ '--reveal-delay': '0.32s' } as React.CSSProperties}>{t.hero.trust}</p>
-        </div>
-        <div className="hero__visual reveal" data-reveal style={{ '--reveal-delay': '0.2s' } as React.CSSProperties}>
-          <div className="hero__stage">
-            <img
-              className="hero__artwork"
-              src="/hero-artwork.png"
-              alt={t.hero.heading}
-              loading="eager"
-              decoding="async"
-              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-            />
+          <div className="hero__visual lg:col-span-5 w-full flex justify-center lg:justify-end reveal" data-reveal style={{ '--reveal-delay': '0.2s' } as React.CSSProperties}>
+            <EnvelopeMockup />
           </div>
         </div>
       </div>
@@ -121,24 +122,79 @@ function HeroSection() {
 
 // Value Section
 function ValueSection() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const isAr = lang === 'ar';
   const ref = useReveal({ group: true });
   return (
     <section className="section value" ref={ref as React.RefObject<HTMLElement>}>
       <div className="value__inner container">
         <div className="value__media reveal" data-reveal>
-          <picture className="picture-passthrough">
-            <source srcSet="/second-section.webp" type="image/webp" />
-            <img
-              className="value__artwork"
-              src="/second-section.png"
-              alt={t.value.heading}
-              width={1023}
-              height={1537}
-              loading="lazy"
-              decoding="async"
-            />
-          </picture>
+          <div className="bg-sand-card border border-sand-border rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col justify-between h-full min-h-[380px]">
+            {/* Top Badge */}
+            <div className="flex items-center justify-between border-b border-sand-border/60 pb-4 mb-6">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-teal flex items-center justify-center text-ivory font-bold text-sm">
+                  M
+                </div>
+                <div>
+                  <h4 className="font-heading font-medium text-teal text-sm leading-tight">
+                    {t.brand.name} {t.brand.by}
+                  </h4>
+                  <p className="text-[11px] text-ink/60">
+                    {isAr ? 'منصة الدعوات التفاعلية' : 'Digital Invitation Studio'}
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs bg-brass/10 text-brass border border-brass/20 rounded-full px-3 py-1 font-medium">
+                {isAr ? 'متعدد المناسبات' : 'Multi-Event'}
+              </span>
+            </div>
+
+            {/* Event categories preview cards */}
+            <div className="space-y-3 my-auto">
+              <div className="p-3.5 rounded-2xl bg-ivory/60 border border-sand-border flex items-center justify-between transition-all hover:bg-ivory">
+                <div className="flex items-center gap-3">
+                  <span className="w-9 h-9 rounded-xl bg-teal/10 text-teal flex items-center justify-center text-base">💍</span>
+                  <div>
+                    <h5 className="font-medium text-ink text-sm">{isAr ? 'حفلات الزفاف والخطوبة' : 'Weddings & Engagements'}</h5>
+                    <p className="text-xs text-ink/60">{isAr ? 'موسيقى خاصة، تأكيد حضور، وتوقيت الحفل' : 'Custom music, RSVP, itinerary & directions'}</p>
+                  </div>
+                </div>
+                <span className="text-xs text-brass font-medium">✦</span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-ivory/60 border border-sand-border flex items-center justify-between transition-all hover:bg-ivory">
+                <div className="flex items-center gap-3">
+                  <span className="w-9 h-9 rounded-xl bg-brass/15 text-brass flex items-center justify-center text-base">🎓</span>
+                  <div>
+                    <h5 className="font-medium text-ink text-sm">{isAr ? 'حفلات التخرج والتكريم' : 'Graduation & Galas'}</h5>
+                    <p className="text-xs text-ink/60">{isAr ? 'مشاركة سهلة عبر الجوال وجدار التهاني' : 'Mobile sharing & live guest congratulations wall'}</p>
+                  </div>
+                </div>
+                <span className="text-xs text-brass font-medium">✦</span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-ivory/60 border border-sand-border flex items-center justify-between transition-all hover:bg-ivory">
+                <div className="flex items-center gap-3">
+                  <span className="w-9 h-9 rounded-xl bg-clay/15 text-clay flex items-center justify-center text-base">✨</span>
+                  <div>
+                    <h5 className="font-medium text-ink text-sm">{isAr ? 'الاحتفالات والمناسبات الخاصة' : 'Milestone Celebrations'}</h5>
+                    <p className="text-xs text-ink/60">{isAr ? 'ألبوم صور عالي الدقة وخرائط تفاعلية' : 'Curated photo albums & venue navigation'}</p>
+                  </div>
+                </div>
+                <span className="text-xs text-brass font-medium">✦</span>
+              </div>
+            </div>
+
+            {/* Bottom summary chip */}
+            <div className="pt-4 mt-4 border-t border-sand-border/60 flex items-center justify-between text-xs text-ink/70">
+              <span className="flex items-center gap-1.5 font-medium text-teal">
+                <span className="w-2 h-2 rounded-full bg-brass" />
+                {isAr ? 'تأكيد الحضور في ثوانٍ' : 'One-Tap Guest Confirmation'}
+              </span>
+              <span className="font-mono text-[11px] text-ink/50">2026 Edition</span>
+            </div>
+          </div>
         </div>
         <div className="value__copy">
           <p className="eyebrow reveal" data-reveal>{t.value.eyebrow}</p>
@@ -327,14 +383,11 @@ function WhySection() {
       <div className="why__inner container">
         <div className="why__visual reveal" data-reveal>
           <Botanical variant="corner" className="why__corner" />
-          <figure className="why__logo-frame">
-            <img
-              src="/logo1.jpg"
-              alt="Invite Studio by Sarah — brand logo"
-              width={520} height={520}
-              loading="lazy"
-              onError={e => { (e.target as HTMLImageElement).style.opacity = '0.3'; }}
-            />
+          <figure className="why__logo-frame flex flex-col items-center justify-center p-8 bg-sand-card rounded-3xl border border-sand-border shadow-sm min-h-[340px] text-center">
+            <BrandLogo size="lg" />
+            <p className="mt-4 font-heading text-brass text-lg tracking-wide">
+              {t.brand.tagline}
+            </p>
           </figure>
         </div>
         <div className="why__copy">
