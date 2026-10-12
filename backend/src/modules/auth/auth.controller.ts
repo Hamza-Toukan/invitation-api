@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Body,
   UseGuards,
   HttpCode,
@@ -15,7 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
-import { SendOtpDto, VerifyOtpDto } from './dto';
+import { SendOtpDto, VerifyOtpDto, UpdateProfileDto } from './dto';
 import {
   SendOtpResponseDto,
   VerifyOtpResponseDto,
@@ -98,4 +99,29 @@ export class AuthController {
   ): Promise<UserProfileDto> {
     return this.authService.getProfile(userId);
   }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update current authenticated user profile',
+    description: 'Updates full name and email address for the logged-in user.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile updated successfully',
+    type: UserProfileDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized: Missing or invalid JWT Bearer token',
+  })
+  async updateProfile(
+    @CurrentUser('id') userId: string,
+    @Body() dto: UpdateProfileDto,
+  ): Promise<UserProfileDto> {
+    return this.authService.updateProfile(userId, dto);
+  }
 }
+

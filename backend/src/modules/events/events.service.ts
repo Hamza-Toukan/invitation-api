@@ -2,8 +2,9 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
-import { EventStatus, GuestStatus, UserRole } from '@prisma/client';
+import { EventStatus, GuestStatus, UserRole, OrderStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   CreateEventDto,
@@ -284,6 +285,53 @@ export class EventsService {
     return {
       success: true,
       message: this.i18n.t('gallery.deleted', lang),
+    };
+  }
+
+  /**
+   * Deletes an event draft or uncompleted event.
+   */
+  async deleteEvent(
+    eventId: string,
+    userId: string,
+    userRole: UserRole,
+    lang: SupportedLanguage = 'ar',
+  ) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      include: {
+        orders: true,
+      },
+    });
+
+    if (!event) {
+      throw new NotFoundException(this.i18n.t('event.not_found', lang));
+    }
+
+    this.checkOwnership(event.host_id, userId, userRole, lang);
+
+    const hasCompletedOrder = event.orders.some(
+      (o) => o.status === OrderStatus.COMPLETED,
+    );
+    if (hasCompletedOrder && userRole !== UserRole.SUPER_ADMIN && userRole !== UserRole.ADMIN) {
+      throw new BadRequestException(
+        'Cannot delete an event with a completed paid order. Please contact support.',
+      );
+    }
+
+    // Delete any pending orders first due to Restrict relation, then delete event
+    await this.prisma.$transaction(async (tx) => {
+      await tx.order.deleteMany({
+        where: { event_id: eventId },
+      });
+      await tx.event.delete({
+        where: { id: eventId },
+      });
+    });
+
+    return {
+      success: true,
+      message: 'Event deleted successfully',
     };
   }
 
