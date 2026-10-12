@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Reem+Kufi:wght@400..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Reem+Kufi:wght@400..700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -44,12 +44,13 @@
   --shadow-lg: 0 34px 80px rgba(18, 54, 58, .16);
   --shadow-glow: 0 0 50px rgba(184, 138, 74, .25);
 
-  /* Typography: Fraunces & DM Sans (EN), Reem Kufi & IBM Plex Sans Arabic (AR) */
+  /* Typography: Fraunces & DM Sans (EN), Reem Kufi & IBM Plex Sans Arabic (AR), Aref Ruqaa (Accent) */
   --font-serif-en: "Fraunces", Georgia, serif;
   --font-body-en: "DM Sans", system-ui, -apple-system, sans-serif;
   --font-script: "Fraunces", serif;
   --font-display-ar: "Reem Kufi", sans-serif;
   --font-body-ar: "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-ruqaa-ar: "Aref Ruqaa", "Reem Kufi", serif;
   --font-heading: var(--font-serif-en);
   --font-body: var(--font-body-en);
   --maxw: 1200px;
@@ -63,6 +64,109 @@
   --ease-out: cubic-bezier(.16, 1, .3, 1);
   --dur: .6s;
 }
+
+/* ==========================================================================
+   HERO REDESIGN STYLES & ACCENTS
+   ========================================================================== */
+.font-ruqaa {
+  font-family: var(--font-ruqaa-ar);
+}
+[dir=ltr] .font-ruqaa {
+  font-family: var(--font-serif-en);
+  font-style: italic;
+}
+
+/* Navbar active indicator and scroll state */
+.header__link.is-active {
+  color: var(--teal);
+  font-weight: 600;
+}
+.header__link.is-active:after {
+  transform: scaleX(1);
+}
+
+/* Arabic typographic rules: line height 1.3-1.4, strictly NO letter spacing */
+[dir=rtl] .hero__headline,
+[dir=rtl] h1,
+[dir=rtl] h2,
+[dir=rtl] h3 {
+  letter-spacing: 0 !important;
+  line-height: 1.35;
+}
+
+/* Floating chips keyframe animation (translateY +-6px, 5-6s ease-in-out staggered) */
+@keyframes heroFloatA {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes heroFloatB {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+.hero-chip-float-1 {
+  animation: heroFloatA 5.5s ease-in-out infinite;
+}
+
+.hero-chip-float-2 {
+  animation: heroFloatB 6s ease-in-out infinite 0.8s;
+}
+
+/* Hero entrance staggered animation with prefers-reduced-motion check */
+@keyframes heroFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-anim-eyebrow {
+  animation: heroFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.05s backwards;
+}
+.hero-anim-h1 {
+  animation: heroFadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.15s backwards;
+}
+.hero-anim-sub {
+  animation: heroFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s backwards;
+}
+.hero-anim-cta {
+  animation: heroFadeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.35s backwards;
+}
+.hero-anim-trust {
+  animation: heroFadeUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.45s backwards;
+}
+.hero-anim-phone {
+  animation: heroFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-chip-float-1,
+  .hero-chip-float-2,
+  .hero-anim-eyebrow,
+  .hero-anim-h1,
+  .hero-anim-sub,
+  .hero-anim-cta,
+  .hero-anim-trust,
+  .hero-anim-phone {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 
 [dir=rtl] {
   --font-heading: var(--font-display-ar);

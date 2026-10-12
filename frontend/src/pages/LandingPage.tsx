@@ -8,14 +8,25 @@ import { TypingTitle } from '../components/TypingTitle';
 import { useReveal } from '../hooks/useReveal';
 import { Link } from 'react-router-dom';
 import { BrandLogo } from '../components/BrandLogo';
-import { EnvelopeMockup } from '../components/EnvelopeMockup';
+import { HeroSection } from '../components/HeroSection';
 import { billingApi, type PricingPlan, type CouponValidationResponse } from '../services/api/billing.api';
 
 const WHATSAPP = 'https://wa.me/[WHATSAPP_NUMBER]';
 
 // Icons
-const ArrowIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+const ArrowIcon = ({ isRtl = false }: { isRtl?: boolean }) => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`transition-transform duration-200 ${isRtl ? 'rotate-180' : ''}`}
+    aria-hidden="true"
+  >
     <path d="M5 12h14M13 6l6 6-6 6" />
   </svg>
 );
@@ -75,51 +86,6 @@ const TEMPLATES = [
   { id: 4, slug: 'pink-floral', titleEn: 'Pink Floral', titleAr: 'الوردي المزهر', subtitleEn: 'Floral Daylight', subtitleAr: 'طابع زهري', image: '/templates/pink.jpg' },
   { id: 5, slug: 'blue-and-gold', titleEn: 'Blue & Gold', titleAr: 'الأزرق والذهبي', subtitleEn: 'Coastal Elegance', subtitleAr: 'أناقة ساحلية', image: '/templates/gold%20and%20sky.jpg' },
 ];
-
-// Hero Section
-function HeroSection() {
-  const { t } = useLang();
-  const ref = useReveal({ group: true });
-  return (
-    <section className="hero relative overflow-hidden py-12 md:py-20 lg:py-28" id="home" ref={ref as React.RefObject<HTMLElement>}>
-      <div className="hero__bg absolute inset-0 pointer-events-none" aria-hidden="true">
-        <span className="hero__glow hero__glow--1" />
-        <span className="hero__glow hero__glow--2" />
-        <Botanical variant="corner" className="hero__botanical" draw />
-      </div>
-      <div className="hero__inner container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-          <div className="hero__copy lg:col-span-7 flex flex-col items-start text-start">
-            <p className="eyebrow hero__eyebrow reveal" data-reveal>{t.hero.eyebrow}</p>
-            <TypingTitle as="h1" text={t.hero.heading} className="hero__title reveal font-heading font-medium tracking-tight mb-6" data-reveal style={{ '--reveal-delay': '0.08s' } as React.CSSProperties} />
-            <p className="lead hero__lead reveal text-lg sm:text-xl text-ink/85 leading-relaxed max-w-2xl mb-8" data-reveal style={{ '--reveal-delay': '0.16s' } as React.CSSProperties}>{t.hero.paragraph}</p>
-            <div className="hero__actions reveal flex flex-wrap gap-4 items-center mb-8" data-reveal style={{ '--reveal-delay': '0.24s' } as React.CSSProperties}>
-              <a
-                href={WHATSAPP}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="inline-flex items-center justify-center gap-2.5 bg-teal text-ivory rounded-full px-8 py-3.5 font-medium hover:opacity-95 transition-opacity shadow-sm hover:shadow"
-              >
-                <span>{t.hero.primary}</span>
-                <ArrowIcon />
-              </a>
-              <Link
-                to="/templates"
-                className="inline-flex items-center justify-center gap-2 border border-teal text-teal rounded-full px-8 py-3.5 font-medium hover:bg-teal/5 transition-colors"
-              >
-                {t.hero.secondary}
-              </Link>
-            </div>
-            <p className="hero__trust reveal text-sm text-ink/65 font-medium flex items-center gap-2" data-reveal style={{ '--reveal-delay': '0.32s' } as React.CSSProperties}>{t.hero.trust}</p>
-          </div>
-          <div className="hero__visual lg:col-span-5 w-full flex justify-center lg:justify-end reveal" data-reveal style={{ '--reveal-delay': '0.2s' } as React.CSSProperties}>
-            <EnvelopeMockup />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 // Value Section
 function ValueSection() {

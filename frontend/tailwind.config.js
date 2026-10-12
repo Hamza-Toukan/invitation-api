@@ -43,6 +43,7 @@ export default {
         'reem-kufi': ['"Reem Kufi"', 'sans-serif'],
         'dm-sans': ['"DM Sans"', 'sans-serif'],
         'ibm-plex-arabic': ['"IBM Plex Sans Arabic"', 'sans-serif'],
+        'ruqaa': ['"Aref Ruqaa"', 'serif'],
       },
       borderRadius: {
         'pill': '9999px',

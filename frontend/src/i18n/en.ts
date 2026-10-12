@@ -25,11 +25,18 @@ export const en = {
   hero: {
     eyebrow: 'Interactive Digital Invitations',
     heading: 'Your Moment, Beautifully Invited',
+    headingLine1: 'Your Moment,',
+    headingLine2: 'Beautifully Invited',
     paragraph:
-      'Interactive digital invitations you open with your touch: envelope, curated music, and one-tap RSVP — crafted for weddings, engagements, and unforgettable celebrations.',
+      'Interactive digital invitations you open with a single touch: refined design, curated music, and instant RSVP — crafted for weddings, engagements, and your most meaningful celebrations.',
     primary: 'Request Your Invitation',
     secondary: 'Explore Templates',
     trust: '✦ Trusted for hundreds of celebrations across the region',
+    trustPre: 'Trusted by',
+    trustPost: 'families',
+    trustSub: 'to host their celebrations',
+    chipLive: 'Interactive Live Demo',
+    chipRsvp: 'Instant RSVP Tracking',
   },
   value: {
     eyebrow: 'Why Digital?',

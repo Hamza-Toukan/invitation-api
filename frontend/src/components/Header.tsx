@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { BrandLogo } from './BrandLogo';
 import { Btn } from './Btn';
 import { LangSwitch } from './LangSwitch';
@@ -20,7 +20,9 @@ const CloseIcon = () => (
 export function Header() {
   const { t } = useLang();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const [atTop, setAtTop] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const burgerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -35,7 +37,10 @@ export function Header() {
   ];
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 24);
+      setAtTop(window.scrollY < 400);
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -67,6 +72,8 @@ export function Header() {
     else { navigate(`/#${id}`); }
   };
 
+  const isActive = (id: string) => id === 'home' && pathname === '/' && atTop;
+
   return (
     <header className={`header${scrolled ? ' is-scrolled' : ''}`}>
       <div className="header__inner container">
@@ -83,7 +90,12 @@ export function Header() {
           <ul>
             {navItems.map(item => (
               <li key={item.id}>
-                <button type="button" className="header__link" onClick={() => scrollTo(item.id)}>
+                <button
+                  type="button"
+                  className={`header__link${isActive(item.id) ? ' is-active' : ''}`}
+                  aria-current={isActive(item.id) ? 'page' : undefined}
+                  onClick={() => scrollTo(item.id)}
+                >
                   {item.label}
                 </button>
               </li>
