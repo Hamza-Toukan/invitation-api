@@ -118,4 +118,41 @@ export class AuthService {
       role: user.role,
     };
   }
+
+  /**
+   * Updates profile information (name, email) for the authenticated user.
+   */
+  async updateProfile(userId: string, dto: { name?: string; email?: string }): Promise<UserProfileDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User profile not found');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(dto.name !== undefined && { name: dto.name.trim() }),
+        ...(dto.email !== undefined && { email: dto.email.trim().toLowerCase() }),
+      },
+      select: {
+        id: true,
+        phone_number: true,
+        email: true,
+        name: true,
+        role: true,
+      },
+    });
+
+    return {
+      id: updated.id,
+      phoneNumber: updated.phone_number,
+      email: updated.email,
+      name: updated.name,
+      role: updated.role,
+    };
+  }
 }
+

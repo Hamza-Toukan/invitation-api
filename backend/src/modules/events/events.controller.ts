@@ -183,4 +183,27 @@ export class EventsController {
       lang,
     );
   }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Delete an event invitation',
+    description: 'Allows a host or administrator to delete an event invitation.',
+  })
+  @ApiParam({ name: 'id', description: 'Event UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Event deleted successfully',
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden: You do not own this event' })
+  @ApiResponse({ status: 404, description: 'Event not found' })
+  async deleteEvent(
+    @Param('id', ParseUUIDPipe) eventId: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole: UserRole,
+    @CurrentLanguage() lang: SupportedLanguage,
+  ) {
+    return this.eventsService.deleteEvent(eventId, userId, userRole, lang);
+  }
 }
+
